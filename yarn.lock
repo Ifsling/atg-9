@@ -408,6 +408,11 @@ enhanced-resolve@^5.18.1:
     graceful-fs "^4.2.4"
     tapable "^2.2.0"
 
+eventemitter3@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-5.0.1.tgz#53f5ffd0a492ac800721bb42c66b841de96423c4"
+  integrity sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==
+
 graceful-fs@^4.2.4:
   version "4.2.11"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.11.tgz#4183e4e8bf08bb6e05bbb2f7d2e0c8f712ca40e3"
@@ -518,6 +523,13 @@ next@15.3.2:
     "@next/swc-win32-arm64-msvc" "15.3.2"
     "@next/swc-win32-x64-msvc" "15.3.2"
     sharp "^0.34.1"
+
+phaser@^3.88.2:
+  version "3.88.2"
+  resolved "https://registry.yarnpkg.com/phaser/-/phaser-3.88.2.tgz#f9bf48560efc16e23935a6ef4d20b625a51de013"
+  integrity sha512-UBgd2sAFuRJbF2xKaQ5jpMWB8oETncChLnymLGHcrnT53vaqiGrQWbUKUDBawKLm24sghjKo4Bf+/xfv8espZQ==
+  dependencies:
+    eventemitter3 "^5.0.1"
 
 picocolors@^1.0.0, picocolors@^1.1.1:
   version "1.1.1"
