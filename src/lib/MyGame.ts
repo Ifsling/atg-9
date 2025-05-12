@@ -1,74 +1,110 @@
-import Phaser from "phaser"
-import { handlePlayerMovement } from "./player/Player"
+import { handleShooting } from "./bullet/Bullet"
+import { handleGunPickup } from "./gun/Gun"
+import { setupControls } from "./HelperFunctions"
+import { createMap } from "./map/Map"
+import {
+  createPlayer,
+  handlePlayerMovement,
+  PlayerCharacter,
+} from "./player/Player"
+
+export interface CustomKeys {
+  up: Phaser.Input.Keyboard.Key
+  down: Phaser.Input.Keyboard.Key
+  left: Phaser.Input.Keyboard.Key
+  right: Phaser.Input.Keyboard.Key
+  upArrow: Phaser.Input.Keyboard.Key
+  downArrow: Phaser.Input.Keyboard.Key
+  leftArrow: Phaser.Input.Keyboard.Key
+  rightArrow: Phaser.Input.Keyboard.Key
+}
 
 export class MyGame extends Phaser.Scene {
-  player!: Phaser.Physics.Arcade.Sprite
-  cursors!: Phaser.Types.Input.Keyboard.CursorKeys
+  player!: PlayerCharacter
+  cursors!: any
+  gun!: Phaser.Physics.Arcade.Sprite
+  bullets!: Phaser.Physics.Arcade.Group
+  canShoot: boolean = true
+  shootCooldown: number = 300 // Cooldown in milliseconds
+  maxBullets: number = 10
+  PlayerParent!: Phaser.GameObjects.Container
 
   constructor() {
     super("MyGame")
   }
 
   preload() {
+    this.load.image("tileset", "/tiled-software-datas/map-tileset/tileset.png")
+    this.load.tilemapTiledJSON(
+      "map",
+      "/tiled-software-datas/tiled-tilemap-json.json"
+    )
     this.load.image("player", "/images/player.png")
+    this.load.image("gun", "/images/gun.png")
+    this.load.image("player-with-gun", "/images/player-with-gun.png")
+    this.load.image("bullet", "/images/bullet.png")
   }
 
   create() {
-    const svg = `
-      <svg width="1000" height="1000" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100%" height="100%" fill="#e0e0e0"/>
-        ${[...Array(10)]
-          .map(
-            (_, i) => `
-          <rect x="${i * 100}" y="0" width="20" height="1000" fill="#999" />
-          <rect x="0" y="${i * 100}" width="1000" height="20" fill="#999" />
-        `
-          )
-          .join("")}
-        ${[...Array(9)]
-          .map((_, row) =>
-            [...Array(9)]
-              .map(
-                (_, col) => `
-          <rect 
-            x="${col * 100 + 20}" 
-            y="${row * 100 + 20}" 
-            width="60" 
-            height="60" 
-            fill="#d35400" 
-            stroke="#333" 
-            stroke-width="2"
-          />
-        `
-              )
-              .join("")
-          )
-          .join("")}
-    </svg>`
+    const { map, houses } = createMap(this)
+    this.player = createPlayer(this, 1100, 100)
+    this.cursors = setupControls(this)
+    this.gun = this.physics.add
+      .staticSprite(1000, 500, "gun")
+      .setScale(0.1)
+      .setOrigin(0.2, 0.7)
 
-    const svgBase64 = "data:image/svg+xml;base64," + btoa(svg)
+    // this.PlayerParent = this.add.container(1100, 300, [this.player])
+    // this.physics.add.existing(this.PlayerParent)
 
-    this.textures.addBase64("citymap", svgBase64)
+    // const body = this.PlayerParent.body as Phaser.Physics.Arcade.Body
+    // body.setCollideWorldBounds(true)
+    // body.setSize(this.player.displayWidth, this.player.displayHeight)
+    // body.setOffset(
+    //   -this.player.displayWidth / 2,
+    //   -this.player.displayHeight / 2
+    // )
 
-    this.textures.once(Phaser.Textures.Events.ADD, (key: string) => {
-      if (key === "citymap") {
-        const city = this.add.image(0, 0, "citymap").setOrigin(0).setScale(4)
-        const width = city.width * 4
-        const height = city.height * 4
+    if (houses) {
+      this.physics.add.collider(this.player, houses)
+      this.physics.add.collider(this.gun, houses)
+    }
 
-        this.physics.world.setBounds(0, 0, width, height)
-        this.cameras.main.setBounds(0, 0, width, height)
+    this.physics.add.overlap(
+      this.player,
+      this.gun,
+      () => handleGunPickup(this),
+      undefined,
+      this
+    )
 
-        this.player = this.physics.add.sprite(400, 300, "player").setScale(0.02)
-        this.player.setCollideWorldBounds(true)
-        this.cameras.main.startFollow(this.player, true, 0.08, 0.08)
+    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
+    this.cameras.main.startFollow(this.player, true, 0.08, 0.08)
 
-        this.cursors = this.input!.keyboard!.createCursorKeys()
-      }
+    this.bullets = this.physics.add.group({
+      classType: Phaser.Physics.Arcade.Image,
+      maxSize: this.maxBullets,
+      runChildUpdate: true,
     })
   }
 
   update() {
     handlePlayerMovement(this.player, this.cursors)
+    handleShooting(this)
+
+    if (this.player.canShoot) {
+      // Update gun position and rotation to follow player and point to cursor
+      this.gun.setPosition(this.player.x + 40, this.player.y + 40)
+
+      const angle = Phaser.Math.Angle.Between(
+        this.gun.x,
+        this.gun.y,
+        this.input.activePointer.worldX,
+        this.input.activePointer.worldY
+      )
+
+      this.gun.setRotation(angle)
+    }
   }
 }
