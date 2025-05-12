@@ -1,6 +1,7 @@
 // src/utils/gameHelpers.ts
 import Phaser from "phaser"
-import { CustomKeys } from "./MyGame"
+import { CustomKeys, MyGame } from "./MyGame"
+import { handleGunPickup } from "./gun/Gun"
 
 export function setupControls(scene: Phaser.Scene): CustomKeys {
   return scene.input.keyboard!.addKeys({
@@ -12,5 +13,24 @@ export function setupControls(scene: Phaser.Scene): CustomKeys {
     downArrow: Phaser.Input.Keyboard.KeyCodes.DOWN,
     leftArrow: Phaser.Input.Keyboard.KeyCodes.LEFT,
     rightArrow: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+    t: Phaser.Input.Keyboard.KeyCodes.T,
   }) as CustomKeys
+}
+
+export function handleCollisions(
+  scene: MyGame,
+  houses: Phaser.Tilemaps.TilemapLayer | null = null
+) {
+  if (houses) {
+    scene.physics.add.collider(scene.PlayerParent, houses)
+    scene.physics.add.collider(scene.gunsGroup, houses)
+  }
+
+  scene.physics.add.overlap(
+    scene.PlayerParent,
+    scene.gunsGroup,
+    (player, gun) => handleGunPickup(scene, gun as Phaser.GameObjects.Sprite),
+    undefined,
+    scene
+  )
 }

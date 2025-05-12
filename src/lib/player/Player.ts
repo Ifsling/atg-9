@@ -1,18 +1,34 @@
 import Phaser from "phaser"
-import { CustomKeys } from "../MyGame"
+import { CustomKeys, MyGame } from "../MyGame"
 
-export class Player extends Phaser.Physics.Arcade.Sprite {
+export class Player extends Phaser.GameObjects.Sprite {
   canShoot: boolean = false
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
     super(scene, x, y, texture)
-    scene.physics.add.existing(this)
     this.setScale(0.3)
-    this.setCollideWorldBounds(true)
   }
 }
 
 export type PlayerCharacter = Player
+
+export function setupPlayerParent(scene: MyGame) {
+  scene.PlayerParent = scene.add.container(1100, 300, [scene.player])
+  scene.physics.add.existing(scene.PlayerParent)
+
+  scene.playerParentBody = scene.PlayerParent.body as Phaser.Physics.Arcade.Body
+  scene.playerParentBody.setCollideWorldBounds(true)
+  scene.playerParentBody.setSize(
+    scene.player.displayWidth,
+    scene.player.displayHeight
+  )
+  scene.playerParentBody.setOffset(
+    -scene.player.displayWidth / 2,
+    -scene.player.displayHeight / 2
+  )
+
+  return scene.PlayerParent
+}
 
 export function createPlayer(
   scene: Phaser.Scene,
@@ -21,27 +37,27 @@ export function createPlayer(
 ): Player {
   const player = new Player(scene, xPos, yPos, "player")
   scene.add.existing(player)
+
   return player
 }
 
 export function handlePlayerMovement(
-  player: Phaser.Physics.Arcade.Sprite,
+  playerParent: Phaser.GameObjects.Container,
   cursors: CustomKeys,
   speed = 200
 ) {
-  if (!player || !cursors) return
-
-  player.setVelocity(0)
+  const body = playerParent.body as Phaser.Physics.Arcade.Body
+  body.setVelocity(0)
 
   if (cursors.left.isDown || cursors.leftArrow.isDown) {
-    player.setVelocityX(-speed)
+    body.setVelocityX(-speed)
   } else if (cursors.right.isDown || cursors.rightArrow.isDown) {
-    player.setVelocityX(speed)
+    body.setVelocityX(speed)
   }
 
   if (cursors.up.isDown || cursors.upArrow.isDown) {
-    player.setVelocityY(-speed)
+    body.setVelocityY(-speed)
   } else if (cursors.down.isDown || cursors.downArrow.isDown) {
-    player.setVelocityY(speed)
+    body.setVelocityY(speed)
   }
 }
