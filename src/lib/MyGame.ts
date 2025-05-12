@@ -105,7 +105,7 @@ export class MyGame extends Phaser.Scene {
     // Bullet pool
     this.bullets = this.physics.add.group({
       classType: Phaser.Physics.Arcade.Image,
-      maxSize: this.maxBullets,
+      maxSize: this.currentGun?.maxAmmo,
       runChildUpdate: true,
     })
   }

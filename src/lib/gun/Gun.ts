@@ -28,6 +28,11 @@ export function handleGunPickup(
     gunType: data.gunType,
   }
 
+  scene.bullets = scene.physics.add.group({
+    classType: Phaser.Physics.Arcade.Image,
+    maxSize: data.ammo,
+    runChildUpdate: true,
+  })
   scene.gunsGroup.remove(gunSprite, true, false)
 
   scene.PlayerParent.add(scene.currentGun.sprite)
@@ -61,5 +66,8 @@ export function handleGunThrow(scene: MyGame, cursors: CustomKeys) {
     // Clear current gun reference
     scene.currentGun = undefined
     scene.player.canShoot = false
+
+    scene.bullets.clear(true, true) // Destroys all bullets
+    scene.bullets.destroy() // Destroys the group itself
   }
 }
