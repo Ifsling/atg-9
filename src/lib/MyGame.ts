@@ -1,6 +1,13 @@
 import { handleShooting } from "./bullet/Bullet"
+import { Enemy } from "./enemy/Enemy"
 import { handleGunRotation, handleGunThrow } from "./gun/Gun"
-import { handleCollisions, setupControls } from "./HelperFunctions"
+import {
+  addingGunstoMap,
+  createPlayerBullets,
+  handleCollisions,
+  handleUi,
+  setupControls,
+} from "./HelperFunctions"
 import { createMap } from "./map/Map"
 import { cameraFollowPlayer } from "./player/Camera"
 import {
@@ -40,6 +47,10 @@ export class MyGame extends Phaser.Scene {
   PlayerParent!: Phaser.GameObjects.Container
   playerParentBody!: Phaser.Physics.Arcade.Body
   gunsGroup!: Phaser.Physics.Arcade.Group
+  enemies!: Enemy[]
+  playerHealthBackground!: Phaser.GameObjects.Graphics
+  playerHealthBar!: Phaser.GameObjects.Graphics
+  enemy1!: Enemy
 
   // global variables
   canPickupGun: boolean = true
@@ -63,38 +74,22 @@ export class MyGame extends Phaser.Scene {
   }
 
   create() {
-    this.bulletText = this.add
-      .text(10, 10, `Bullets: ${this.maxBullets}`, {
-        fontSize: "18px",
-        color: "#ffffff",
-        fontFamily: "monospace",
-        backgroundColor: "#000000",
-        padding: { x: 6, y: 4 },
-      })
-      .setScrollFactor(0)
-      .setDepth(1000)
-
     const { map, houses, roads, backgroundLayer } = createMap(this)
     this.player = createPlayer(this, 0, 0)
     this.cursors = setupControls(this)
     this.gunsGroup = this.physics.add.group()
 
-    const gun1 = this.physics.add
-      .sprite(1000, 500, "gun")
-      .setScale(0.1)
-      .setOrigin(0.2, 0.7)
-
-    ;(gun1 as any).gunData = { ammo: 10, fireRate: 300, gunType: "pistol" }
-
-    const gun2 = this.physics.add
-      .sprite(1000, 900, "gun")
-      .setScale(0.1)
-      .setOrigin(0.2, 0.7)
-    ;(gun2 as any).gunData = { ammo: 30, fireRate: 100, gunType: "rifle" }
-
-    this.gunsGroup.addMultiple([gun1, gun2])
+    addingGunstoMap(this)
 
     this.PlayerParent = setupPlayerParent(this)
+
+    // Enemy
+    this.enemies = []
+    this.enemy1 = new Enemy(this, 1100, 100)
+    this.enemies.push(this.enemy1)
+
+    // Bullet pool
+    createPlayerBullets(this)
 
     // Colliders
     handleCollisions(this, houses)
@@ -102,12 +97,8 @@ export class MyGame extends Phaser.Scene {
     // Camera follows the container
     cameraFollowPlayer(this, map)
 
-    // Bullet pool
-    this.bullets = this.physics.add.group({
-      classType: Phaser.Physics.Arcade.Image,
-      maxSize: this.currentGun?.maxAmmo,
-      runChildUpdate: true,
-    })
+    // UI
+    handleUi(this)
   }
 
   update() {
@@ -116,5 +107,21 @@ export class MyGame extends Phaser.Scene {
     handleGunRotation(this)
     handleShooting(this)
     handleGunThrow(this, this.cursors)
+    this.enemies.forEach((enemy) => enemy.update())
+  }
+
+  drawPlayerHealthBar(health: number) {
+    const maxHealth = 100
+    const currentHealth = Phaser.Math.Clamp(health, 0, maxHealth)
+    const percent = currentHealth / maxHealth
+
+    const barWidth = 200
+    const barHeight = 20
+    const x = this.scale.width - barWidth - 10
+    const y = 10
+
+    this.playerHealthBar.clear()
+    this.playerHealthBar.fillStyle(0xff0000)
+    this.playerHealthBar.fillRect(x, y, barWidth * percent, barHeight)
   }
 }

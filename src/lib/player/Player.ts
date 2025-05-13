@@ -3,6 +3,7 @@ import { CustomKeys, MyGame } from "../MyGame"
 
 export class Player extends Phaser.GameObjects.Sprite {
   canShoot: boolean = false
+  health: number = 100
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
     super(scene, x, y, texture)
@@ -26,6 +27,7 @@ export function setupPlayerParent(scene: MyGame) {
     -scene.player.displayWidth / 2,
     -scene.player.displayHeight / 2
   )
+  ;(scene.PlayerParent as any).health = 100
 
   return scene.PlayerParent
 }

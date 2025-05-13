@@ -40,7 +40,6 @@ export function shootBullet(
   ) as Phaser.Physics.Arcade.Image
 
   if (!bullet) return
-  console.log("BULLET CREATED")
 
   scene.currentGun!.ammo -= 1
 
@@ -68,14 +67,7 @@ export function shootBullet(
   bullet.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed)
 
   // Enable world bounds collision and destroy bullet on collision
-  bullet.setCollideWorldBounds(true)
-  scene.physics.world.on("worldbounds", (body: Phaser.Physics.Arcade.Body) => {
-    if (body.gameObject === bullet) {
-      bullet.setActive(false)
-      bullet.setVisible(false)
-    }
-  })
+  bullet.setCollideWorldBounds(true, undefined, undefined, true)
 
-  console.log("Bullet created at", player.x, player.y)
-  console.log("Bullet moving to", targetX, targetY)
+  console.log("Bullet body exists:", bullet.body !== null)
 }
