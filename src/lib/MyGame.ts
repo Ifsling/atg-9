@@ -101,13 +101,47 @@ export class MyGame extends Phaser.Scene {
     handleUi(this)
   }
 
+  // Modified MyGame update function with debug visualization
   update() {
     this.bulletText.setText(`Bullets: ${this.currentGun?.ammo || 0}`)
     handlePlayerMovement(this.PlayerParent, this.cursors)
     handleGunRotation(this)
     handleShooting(this)
     handleGunThrow(this, this.cursors)
+
+    // Update enemies
     this.enemies.forEach((enemy) => enemy.update())
+
+    // Debug visualization for collisions - Only enable during debugging
+    if (this.game.config.physics.arcade?.debug) {
+      this.enemies.forEach((enemy) => {
+        this.bullets.getChildren().forEach((bullet) => {
+          const bulletBody = (bullet as Phaser.Physics.Arcade.Image)
+            .body as Phaser.Physics.Arcade.Body
+          const enemyBody = enemy.body
+
+          // Check if physics bodies overlap (this is just for debug visualization)
+          const overlapping = Phaser.Geom.Rectangle.Overlaps(
+            new Phaser.Geom.Rectangle(
+              bulletBody.x,
+              bulletBody.y,
+              bulletBody.width,
+              bulletBody.height
+            ),
+            new Phaser.Geom.Rectangle(
+              enemyBody.x,
+              enemyBody.y,
+              enemyBody.width,
+              enemyBody.height
+            )
+          )
+
+          if (overlapping) {
+            console.log("Visual overlap detected but collision not triggering!")
+          }
+        })
+      })
+    }
   }
 
   drawPlayerHealthBar(health: number) {

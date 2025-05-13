@@ -17,6 +17,7 @@ export function setupControls(scene: Phaser.Scene): CustomKeys {
   }) as CustomKeys
 }
 
+// Modified collision handling function
 export function handleCollisions(
   scene: MyGame,
   houses: Phaser.Tilemaps.TilemapLayer | null = null
@@ -34,46 +35,63 @@ export function handleCollisions(
     scene
   )
 
-  scene.physics.add.collider(
-    scene.bullets,
-    scene.enemy1.sprite,
-    (bullet, enemySprite) => {
-      console.log("Bullet collided with enemy!")
-      const playerBullet = bullet as Phaser.Physics.Arcade.Image
-      playerBullet.destroy()
-      scene.enemy1.takeDamage(20)
-    }
-  )
+  // Clear existing bullet colliders if any
+  if (
+    scene.physics.world.colliders
+      .getActive()
+      .find(
+        (collider) =>
+          collider.object1 === scene.bullets &&
+          scene.enemies.some((enemy) => collider.object2 === enemy.sprite)
+      )
+  ) {
+    scene.physics.world.colliders.destroy()
+  }
 
-  scene.physics.world.on("worldbounds", (body: Phaser.Physics.Arcade.Body) => {
-    const gameObject = body.gameObject
-    if (
-      gameObject &&
-      (gameObject as Phaser.GameObjects.Image).texture?.key === "bullet"
-    ) {
-      const bullet = gameObject as Phaser.Physics.Arcade.Image
-      bullet.setActive(false)
-      bullet.setVisible(false)
-      bullet.destroy()
-    }
-  })
-
+  // Add bullet collision with each enemy
   scene.enemies.forEach((enemy) => {
+    // Player bullets hitting enemies
+    scene.physics.add.overlap(
+      scene.bullets,
+      enemy.sprite,
+      (bullet, enemyContainer) => {
+        console.log("Bullet hit enemy collision detected!")
+        const playerBullet = bullet as Phaser.Physics.Arcade.Image
+        playerBullet.destroy()
+        enemy.takeDamage(20)
+      },
+      undefined,
+      scene
+    )
+
+    // Enemy bullets hitting player
     scene.physics.add.overlap(
       enemy.bullets,
       scene.PlayerParent,
       (player, bullet) => {
         const enemyBullet = bullet as Phaser.Physics.Arcade.Image
-        enemyBullet.setActive(false)
-        enemyBullet.setVisible(false)
         enemyBullet.destroy()
 
         // Reduce player health
         const playerParent = scene.PlayerParent as any
         playerParent.health -= 10
         scene.drawPlayerHealthBar(playerParent.health)
-      }
+        console.log("Player hit! Health:", playerParent.health)
+      },
+      undefined,
+      scene
     )
+  })
+
+  // Handle bullet collisions with world bounds
+  scene.physics.world.on("worldbounds", (body: Phaser.Physics.Arcade.Body) => {
+    const gameObject = body.gameObject
+    if (
+      gameObject &&
+      (gameObject as Phaser.GameObjects.Image).texture?.key === "bullet"
+    ) {
+      gameObject.destroy()
+    }
   })
 }
 

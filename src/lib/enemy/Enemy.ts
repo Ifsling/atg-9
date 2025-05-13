@@ -1,7 +1,8 @@
 import { MyGame } from "../MyGame"
 
+// Modified Enemy class with proper collision handling
 export class Enemy {
-  scene: MyGame // Make sure the scene is typed as MyGame
+  scene: MyGame
   sprite: Phaser.GameObjects.Container
   body: Phaser.Physics.Arcade.Body
   gun: Phaser.GameObjects.Sprite
@@ -10,21 +11,36 @@ export class Enemy {
   maxHealth = 100
   health = 100
   shootTimer: Phaser.Time.TimerEvent
-  enemySprite: Phaser.GameObjects.Sprite // add this
+  enemySprite: Phaser.GameObjects.Sprite
+  hitArea: Phaser.GameObjects.Rectangle // For better hit detection
 
   constructor(scene: MyGame, x: number, y: number) {
     this.scene = scene
 
+    // Create the enemy sprite
     this.enemySprite = scene.add.sprite(0, 0, "player").setScale(0.3)
+
+    // Create the gun
     this.gun = scene.add.sprite(20, 0, "gun").setScale(0.08).setOrigin(0.2, 0.7)
 
-    this.sprite = scene.add.container(x, y, [this.enemySprite, this.gun])
+    // Create a hit area for better collision detection
+    this.hitArea = scene.add.rectangle(0, 0, 60, 60, 0xff0000, 0)
+
+    // Add all components to the container
+    this.sprite = scene.add.container(x, y, [
+      this.hitArea,
+      this.enemySprite,
+      this.gun,
+    ])
+
+    // Enable physics on the container
     scene.physics.add.existing(this.sprite)
 
     this.body = this.sprite.body as Phaser.Physics.Arcade.Body
+    this.body.setSize(60, 60) // Set proper collision size based on sprite
+    this.body.setOffset(-30, -30) // Center the hitbox
     this.body.setCollideWorldBounds(true)
-
-    scene.physics.add.existing(this.enemySprite)
+    this.body.setImmovable(true) // Makes the enemy not move when hit by bullets
 
     // Bullets
     this.bullets = scene.physics.add.group({
@@ -43,39 +59,31 @@ export class Enemy {
       callback: this.shootAtPlayer,
       callbackScope: this,
     })
-    this.body.setOffset(0, 0)
 
-    if (!scene.physics.world.listeners("worldbounds").length) {
-      scene.physics.world.on(
-        "worldbounds",
-        (body: Phaser.Physics.Arcade.Body) => {
-          const bullet = body.gameObject as Phaser.Physics.Arcade.Image
-          if (bullet && bullet.texture?.key === "bullet") {
-            bullet.setActive(false)
-            bullet.setVisible(false)
-            bullet.destroy()
-          }
-        }
-      )
+    // Debug visualization
+    if (scene.game.config.physics.arcade?.debug) {
+      const debugGraphics = this.scene.add
+        .graphics()
+        .setAlpha(0.5)
+        .lineStyle(2, 0xff0000)
+
+      this.scene.events.on("update", () => {
+        debugGraphics.clear()
+        debugGraphics.strokeRect(
+          this.body.x,
+          this.body.y,
+          this.body.width,
+          this.body.height
+        )
+      })
     }
 
-    console.log("Enemy body enabled:", this.body?.enable)
-
-    const debugGraphics = this.scene.add
-      .graphics()
-      .setAlpha(0.5)
-      .lineStyle(2, 0xff0000)
-    debugGraphics.strokeRect(
-      this.body.x - this.body.width / 2,
-      this.body.y - this.body.height / 2,
-      this.body.width,
-      this.body.height
-    )
+    console.log("Enemy created with body:", this.body)
   }
 
   update() {
     const { x, y } = this.sprite
-    const player = (this.scene as MyGame).PlayerParent
+    const player = this.scene.PlayerParent
 
     // Aim gun at player
     const angle = Phaser.Math.Angle.Between(x, y, player.x, player.y)
@@ -101,7 +109,7 @@ export class Enemy {
 
   shootAtPlayer() {
     const { x, y } = this.sprite
-    const player = (this.scene as MyGame).PlayerParent // Cast the scene to MyGame
+    const player = this.scene.PlayerParent
     const angle = Phaser.Math.Angle.Between(x, y, player.x, player.y)
 
     const bullet = this.bullets.get(
@@ -114,27 +122,17 @@ export class Enemy {
     bullet.setActive(true)
     bullet.setVisible(true)
     bullet.setScale(0.08)
-    bullet.body!.reset(x, y)
+    bullet!.body!.reset(x, y)
     bullet.setRotation(angle)
     bullet.setVelocity(Math.cos(angle) * 400, Math.sin(angle) * 400)
 
     bullet.setCollideWorldBounds(true, undefined, undefined, true)
-
-    // Listen for worldbounds event instead of assigning to onWorldBounds
-    // this.scene.physics.world.on(
-    //   "worldbounds",
-    //   (body: Phaser.Physics.Arcade.Body) => {
-    //     if (body.gameObject === bullet) {
-    //       bullet.setActive(false)
-    //       bullet.setVisible(false)
-    //     }
-    //   }
-    // )
   }
 
   takeDamage(amount: number) {
     this.health -= amount
     this.updateHealthBar()
+    console.log(`Enemy took ${amount} damage. Health: ${this.health}`)
     if (this.health <= 0) {
       this.destroy()
     }
@@ -143,7 +141,6 @@ export class Enemy {
   destroy() {
     this.healthBar.destroy()
     this.sprite.destroy()
-    this.gun.destroy()
     this.bullets.clear(true, true)
     this.shootTimer.remove()
   }

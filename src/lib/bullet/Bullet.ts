@@ -23,6 +23,7 @@ export function handleShooting(scene: MyGame) {
   })
 }
 
+// Modified bullet shooting function with improved collision detection
 export function shootBullet(
   scene: MyGame,
   player: Phaser.Physics.Arcade.Body,
@@ -43,15 +44,16 @@ export function shootBullet(
 
   scene.currentGun!.ammo -= 1
 
-  scene.add.existing(bullet)
-  scene.physics.add.existing(bullet)
-
   bullet.setActive(true)
   bullet.setVisible(true)
   bullet.setScale(0.1)
 
-  // Reset the position of the bullet
+  // Reset the physics body
   bullet!.body!.reset(worldGunX, worldGunY)
+
+  // Set bullet body properties
+  bullet!.body!.setSize(bullet.width * 0.8, bullet.height * 0.8) // Slightly smaller than visual size
+  bullet!.body!.setOffset(bullet.width * 0.1, bullet.height * 0.1) // Center the hitbox
 
   // Get angle and set rotation
   const angle = Phaser.Math.Angle.Between(
@@ -62,12 +64,22 @@ export function shootBullet(
   )
   bullet.setRotation(angle)
 
-  // Set bullet velocity to move towards the target
+  // Set bullet velocity
   const speed = 500
   bullet.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed)
 
-  // Enable world bounds collision and destroy bullet on collision
+  // Enable collision with world bounds
   bullet.setCollideWorldBounds(true, undefined, undefined, true)
 
-  console.log("Bullet body exists:", bullet.body !== null)
+  // Ensure the bullet is in the right physics group
+  if (!bullets.contains(bullet)) {
+    bullets.add(bullet)
+  }
+
+  console.log("Bullet fired:", {
+    position: { x: worldGunX, y: worldGunY },
+    velocity: { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed },
+    angle: angle,
+    bodyEnabled: bullet!.body!.enable,
+  })
 }
