@@ -75,11 +75,4 @@ export function shootBullet(
   if (!bullets.contains(bullet)) {
     bullets.add(bullet)
   }
-
-  console.log("Bullet fired:", {
-    position: { x: worldGunX, y: worldGunY },
-    velocity: { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed },
-    angle: angle,
-    bodyEnabled: bullet!.body!.enable,
-  })
 }

@@ -1,5 +1,5 @@
 import { handleShooting } from "./bullet/Bullet"
-import { Enemy } from "./enemy/Enemy"
+import { EnemyNew } from "./enemy/EnemyNew"
 import { handleGunRotation, handleGunThrow } from "./gun/Gun"
 import {
   addingGunstoMap,
@@ -47,10 +47,17 @@ export class MyGame extends Phaser.Scene {
   PlayerParent!: Phaser.GameObjects.Container
   playerParentBody!: Phaser.Physics.Arcade.Body
   gunsGroup!: Phaser.Physics.Arcade.Group
-  enemies!: Enemy[]
   playerHealthBackground!: Phaser.GameObjects.Graphics
   playerHealthBar!: Phaser.GameObjects.Graphics
-  enemy1!: Enemy
+
+  enemies!: EnemyNew[]
+  enemy1!: EnemyNew
+  enemyParent!: Phaser.GameObjects.Container
+  enemySprite!: Phaser.GameObjects.Sprite
+  enemyParentBody!: Phaser.Physics.Arcade.Body
+  enemyBullets!: Phaser.Physics.Arcade.Group
+  enemyShootTimer!: Phaser.Time.TimerEvent
+  enemyGun!: Phaser.GameObjects.Sprite
 
   // global variables
   canPickupGun: boolean = true
@@ -85,8 +92,14 @@ export class MyGame extends Phaser.Scene {
 
     // Enemy
     this.enemies = []
-    this.enemy1 = new Enemy(this, 1100, 100)
+    this.enemy1 = new EnemyNew(this, 1100, 300)
     this.enemies.push(this.enemy1)
+
+    // For multiple enemies, you can create them like this:
+    // for (let i = 0; i < 3; i++) {
+    //   const enemy = new Enemy(this, 800 + i * 200, 100 + i * 100);
+    //   this.enemies.push(enemy);
+    // }
 
     // Bullet pool
     createPlayerBullets(this)
@@ -110,38 +123,7 @@ export class MyGame extends Phaser.Scene {
     handleGunThrow(this, this.cursors)
 
     // Update enemies
-    this.enemies.forEach((enemy) => enemy.update())
-
-    // Debug visualization for collisions - Only enable during debugging
-    if (this.game.config.physics.arcade?.debug) {
-      this.enemies.forEach((enemy) => {
-        this.bullets.getChildren().forEach((bullet) => {
-          const bulletBody = (bullet as Phaser.Physics.Arcade.Image)
-            .body as Phaser.Physics.Arcade.Body
-          const enemyBody = enemy.body
-
-          // Check if physics bodies overlap (this is just for debug visualization)
-          const overlapping = Phaser.Geom.Rectangle.Overlaps(
-            new Phaser.Geom.Rectangle(
-              bulletBody.x,
-              bulletBody.y,
-              bulletBody.width,
-              bulletBody.height
-            ),
-            new Phaser.Geom.Rectangle(
-              enemyBody.x,
-              enemyBody.y,
-              enemyBody.width,
-              enemyBody.height
-            )
-          )
-
-          if (overlapping) {
-            console.log("Visual overlap detected but collision not triggering!")
-          }
-        })
-      })
-    }
+    this.enemies.forEach((enemy) => enemy.update(this))
   }
 
   drawPlayerHealthBar(health: number) {

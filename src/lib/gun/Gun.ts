@@ -5,13 +5,11 @@ export function handleGunPickup(
   gunSprite: Phaser.GameObjects.Sprite
 ) {
   scene.player.canShoot = true
-  console.log("COLLIDED WITH GUN")
 
   // already picked up one
   if (!scene.canPickupGun) return
   scene.canPickupGun = false
 
-  console.log("GUN PICKED UPPP")
   scene.player.canShoot = true
 
   const data = (gunSprite as any).gunData || {

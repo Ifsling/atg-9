@@ -25,8 +25,14 @@ export function handleCollisions(
   if (houses) {
     scene.physics.add.collider(scene.PlayerParent, houses)
     scene.physics.add.collider(scene.gunsGroup, houses)
+
+    // Add collisions between enemy containers and houses
+    scene.enemies.forEach((enemy) => {
+      scene.physics.add.collider(enemy.enemyParent, houses)
+    })
   }
 
+  // Gun pickup overlap
   scene.physics.add.overlap(
     scene.PlayerParent,
     scene.gunsGroup,
@@ -35,48 +41,36 @@ export function handleCollisions(
     scene
   )
 
-  // Clear existing bullet colliders if any
-  if (
-    scene.physics.world.colliders
-      .getActive()
-      .find(
-        (collider) =>
-          collider.object1 === scene.bullets &&
-          scene.enemies.some((enemy) => collider.object2 === enemy.sprite)
-      )
-  ) {
-    scene.physics.world.colliders.destroy()
-  }
-
-  // Add bullet collision with each enemy
+  // Player bullet hits enemy container
   scene.enemies.forEach((enemy) => {
-    // Player bullets hitting enemies
     scene.physics.add.overlap(
       scene.bullets,
-      enemy.sprite,
-      (bullet, enemyContainer) => {
-        console.log("Bullet hit enemy collision detected!")
+      enemy.enemyParent,
+      (bullet, enemyParent) => {
         const playerBullet = bullet as Phaser.Physics.Arcade.Image
         playerBullet.destroy()
+
+        // Damage the enemy
         enemy.takeDamage(20)
       },
       undefined,
       scene
     )
+  })
 
-    // Enemy bullets hitting player
+  // Enemy bullet hits player
+  scene.enemies.forEach((enemy) => {
     scene.physics.add.overlap(
-      enemy.bullets,
+      enemy.enemyBullets,
       scene.PlayerParent,
       (player, bullet) => {
         const enemyBullet = bullet as Phaser.Physics.Arcade.Image
         enemyBullet.destroy()
 
-        // Reduce player health
+        // Damage the player
         const playerParent = scene.PlayerParent as any
         playerParent.health -= 10
         scene.drawPlayerHealthBar(playerParent.health)
-        console.log("Player hit! Health:", playerParent.health)
       },
       undefined,
       scene

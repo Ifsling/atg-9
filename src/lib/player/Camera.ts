@@ -6,4 +6,3 @@ export function cameraFollowPlayer(scene: MyGame, map: Phaser.Tilemaps.Tilemap) 
   scene.cameras.main.startFollow(scene.PlayerParent, true, 0.08, 0.08)
 }
 
-// const map = scene.make.tilemap({ key: "map" })
