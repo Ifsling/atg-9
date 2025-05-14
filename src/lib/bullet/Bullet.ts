@@ -71,6 +71,8 @@ export function shootBullet(
   // Enable collision with world bounds
   bullet.setCollideWorldBounds(true, undefined, undefined, true)
 
+  bullet.body!.setCollisionCategory(2) // or any number that's specific for player bullets
+
   // Ensure the bullet is in the right physics group
   if (!bullets.contains(bullet)) {
     bullets.add(bullet)

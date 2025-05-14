@@ -3,6 +3,7 @@ import { EnemyNew } from "./enemy/EnemyNew"
 import { handleGunRotation, handleGunThrow } from "./gun/Gun"
 import {
   addingGunstoMap,
+  checkBulletAndEnemyCollision,
   createPlayerBullets,
   handleCollisions,
   handleUi,
@@ -11,7 +12,6 @@ import {
 import { createMap } from "./map/Map"
 import { cameraFollowPlayer } from "./player/Camera"
 import {
-  createPlayer,
   handlePlayerMovement,
   PlayerCharacter,
   setupPlayerParent,
@@ -82,17 +82,16 @@ export class MyGame extends Phaser.Scene {
 
   create() {
     const { map, houses, roads, backgroundLayer } = createMap(this)
-    this.player = createPlayer(this, 0, 0)
     this.cursors = setupControls(this)
     this.gunsGroup = this.physics.add.group()
 
     addingGunstoMap(this)
 
-    this.PlayerParent = setupPlayerParent(this)
+    this.PlayerParent = setupPlayerParent(this, 1100, 300)
 
     // Enemy
     this.enemies = []
-    this.enemy1 = new EnemyNew(this, 1100, 300)
+    this.enemy1 = new EnemyNew(this, 1100, 100)
     this.enemies.push(this.enemy1)
 
     // For multiple enemies, you can create them like this:
@@ -124,6 +123,8 @@ export class MyGame extends Phaser.Scene {
 
     // Update enemies
     this.enemies.forEach((enemy) => enemy.update(this))
+
+    checkBulletAndEnemyCollision(this)
   }
 
   drawPlayerHealthBar(health: number) {

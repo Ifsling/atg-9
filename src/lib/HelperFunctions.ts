@@ -28,7 +28,7 @@ export function handleCollisions(
 
     // Add collisions between enemy containers and houses
     scene.enemies.forEach((enemy) => {
-      scene.physics.add.collider(enemy.enemyParent, houses)
+      scene.physics.add.collider(enemy.enemySprite, houses)
     })
   }
 
@@ -41,20 +41,40 @@ export function handleCollisions(
     scene
   )
 
+  // Add physical collision between player and enemies
+  scene.enemies.forEach((enemy) => {
+    scene.physics.add.collider(scene.PlayerParent, enemy.enemySprite)
+  })
+
   // Player bullet hits enemy container
   scene.enemies.forEach((enemy) => {
+    scene.physics.add.collider(scene.bullets, enemy.enemySprite)
+  })
+
+  scene.enemies.forEach((enemy) => {
+    console.log(scene.bullets)
+    console.log(enemy)
     scene.physics.add.overlap(
       scene.bullets,
-      enemy.enemyParent,
-      (bullet, enemyParent) => {
-        const playerBullet = bullet as Phaser.Physics.Arcade.Image
-        playerBullet.destroy()
+      enemy.enemyBullets,
+      (bullet, enemyBullet) => {
+        console.log("collision detected")
+        enemyBullet.destroy()
+        bullet.destroy()
+        enemy.takeDamage(10)
+      }
+    )
+  })
 
-        // Damage the enemy
-        enemy.takeDamage(20)
-      },
-      undefined,
-      scene
+  scene.enemies.forEach((enemy) => {
+    scene.physics.add.collider(
+      scene.bullets, // player bullets group
+      enemy.enemyBullets, // enemy's bullets group
+      (bullet, enemyBullet) => {
+        bullet.destroy()
+        enemyBullet.destroy()
+        enemy.takeDamage(10) // or whatever damage logic you want
+      }
     )
   })
 
@@ -142,4 +162,24 @@ export function createPlayerBullets(scene: MyGame) {
     maxSize: scene.currentGun?.maxAmmo,
     runChildUpdate: true,
   })
+}
+
+export function checkBulletAndEnemyCollision(scene: MyGame) {
+  if (scene.bullets) {
+    scene.bullets.getChildren().forEach((b) => {
+      const bullet = b as Phaser.Physics.Arcade.Image
+      scene.enemies.forEach((enemy) => {
+        const enemyTarget = enemy.enemySprite
+        if (
+          Phaser.Geom.Intersects.RectangleToRectangle(
+            bullet.getBounds(),
+            enemyTarget.getBounds()
+          )
+        ) {
+          bullet.destroy()
+          enemy.takeDamage(50)
+        }
+      })
+    })
+  }
 }

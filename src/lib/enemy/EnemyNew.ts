@@ -2,23 +2,24 @@ import { MyGame } from "../MyGame"
 
 export class EnemyNew {
   scene: MyGame
-  enemyParent!: Phaser.GameObjects.Container
+  enemySprite!: Phaser.Physics.Arcade.Sprite
   enemyGun!: Phaser.GameObjects.Sprite
   enemyBullets!: Phaser.Physics.Arcade.Group
-  health: number
+  health: number = 100
+  maxHealth: number = 100
+  healthBar!: Phaser.GameObjects.Graphics
+  shootTimer!: Phaser.Time.TimerEvent
 
-  constructor(scene: MyGame, x: number = 1100, y: number = 100) {
+  constructor(scene: MyGame, x: number = 1100, y: number = 300) {
     this.scene = scene
 
-    this.health = 100
+    // Create enemy sprite with physics
+    this.enemySprite = scene.physics.add.sprite(x, y, "player").setScale(0.3)
+    this.enemySprite.setCollideWorldBounds(true)
+    this.enemySprite.setImmovable(false)
 
-    // Create the container first
-    this.createEnemyParent(scene, x, y)
-
-    this.enemyParent = this.createEnemyParent(scene, x, y)
-    this.enemyGun = this.enemyParent.getByName(
-      "gun"
-    ) as Phaser.GameObjects.Sprite
+    // Create enemy gun as a separate sprite
+    this.enemyGun = scene.add.sprite(x, y, "gun").setScale(0.1)
 
     // Create bullets group
     this.enemyBullets = scene.physics.add.group({
@@ -28,10 +29,11 @@ export class EnemyNew {
     })
 
     // Create health bar
-    // this.updateHealthBar()
+    this.healthBar = this.scene.add.graphics()
+    this.drawHealthBar()
 
     // Setup shooting timer
-    scene.enemyShootTimer = scene.time.addEvent({
+    this.shootTimer = scene.time.addEvent({
       delay: 1000,
       loop: true,
       callback: this.shootAtPlayer,
@@ -39,71 +41,65 @@ export class EnemyNew {
     })
   }
 
-  createEnemyParent(scene: MyGame, x: number, y: number) {
-    const enemySprite = scene.add.sprite(0, 0, "player").setScale(0.3)
-    const gun = scene.add.sprite(0, 0, "gun").setName("gun").setScale(0.1)
-
-    const parent = scene.add.container(x, y)
-    parent.add(enemySprite)
-    parent.add(gun)
-
-    // Enable physics on the container
-    scene.physics.add.existing(parent)
-
-    // Set body size (if needed)
-    const body = parent.body as Phaser.Physics.Arcade.Body
-    body.setSize(enemySprite.width * 0.3, enemySprite.height * 0.3)
-    body.setOffset(-enemySprite.width * 0.15, -enemySprite.height * 0.15) // center it
-
-    return parent
-  }
-
-  createEnemySprite(scene: MyGame) {
-    return scene.enemySprite
-  }
-
   update(scene: MyGame) {
-    // Aim gun at player
+    if (!this.enemySprite || !this.enemySprite.body) return
+
     const player = scene.PlayerParent
+
+    // Aim gun at player
     const angle = Phaser.Math.Angle.Between(
-      this.enemyParent.x,
-      this.enemyParent.y,
+      this.enemySprite.x,
+      this.enemySprite.y,
       player.x,
       player.y
     )
+
     this.enemyGun.setRotation(angle)
 
+    // Manually position the gun to follow the enemy
+    this.enemyGun.setPosition(this.enemySprite.x, this.enemySprite.y)
+
     // Update health bar position
-    // this.updateHealthBar()
+    this.drawHealthBar()
+
+    // Stop movement unless you add pathfinding
+    this.enemySprite.setVelocity(0)
   }
 
-  // updateHealthBar() {
-  //   const { x, y } = this.container
-  //   this.healthBar.clear()
-  //   this.healthBar.fillStyle(0x000000)
-  //   this.healthBar.fillRect(x - 25, y - 40, 50, 6)
-  //   this.healthBar.fillStyle(0xff0000)
-  //   this.healthBar.fillRect(
-  //     x - 25,
-  //     y - 40,
-  //     50 * (this.health / this.maxHealth),
-  //     6
-  //   )
-  // }
+  // Draw or update the health bar above the enemy
+  drawHealthBar() {
+    const x = this.enemySprite.x
+    const y = this.enemySprite.y - 40
+
+    const width = 50
+    const height = 6
+
+    const ratio = Phaser.Math.Clamp(this.health / this.maxHealth, 0, 1)
+
+    this.healthBar.clear()
+
+    // Background (black)
+    this.healthBar.fillStyle(0x000000)
+    this.healthBar.fillRect(x - width / 2, y, width, height)
+
+    // Foreground (red)
+    this.healthBar.fillStyle(0xff0000)
+    this.healthBar.fillRect(x - width / 2, y, width * ratio, height)
+  }
 
   shootAtPlayer = () => {
     const player = this.scene.PlayerParent
 
     const angle = Phaser.Math.Angle.Between(
-      this.enemyParent.x,
-      this.enemyParent.y,
+      this.enemySprite.x,
+      this.enemySprite.y,
       player.x,
       player.y
     )
 
     const bullet = this.enemyBullets.get(
-      this.enemyParent.x,
-      this.enemyParent.y,
+      this.enemySprite.x,
+      this.enemySprite.y,
       "bullet"
     ) as Phaser.Physics.Arcade.Image
 
@@ -112,10 +108,10 @@ export class EnemyNew {
     bullet.setActive(true)
     bullet.setVisible(true)
     bullet.setScale(0.1)
-
-    bullet.body!.reset(this.enemyParent.x, this.enemyParent.y)
+    bullet.body!.reset(this.enemySprite.x, this.enemySprite.y)
     bullet.body!.setSize(bullet.width, bullet.height)
     bullet.body!.setOffset(bullet.width * 0.1, bullet.height * 0.1)
+
     bullet.setRotation(angle)
     bullet.setVelocity(Math.cos(angle) * 400, Math.sin(angle) * 400)
     bullet.setCollideWorldBounds(true)
@@ -129,14 +125,25 @@ export class EnemyNew {
     this.health -= amount
     if (this.health <= 0) {
       this.destroy()
+    } else {
+      this.drawHealthBar()
     }
 
-    console.log("Enemy took damage of: ", amount, "\nHealth: ", this.health)
+    console.log("Enemy took damage:", amount, "Remaining health:", this.health)
   }
 
   destroy() {
-    // this.healthBar.destroy()
+    this.shootTimer.remove()
+
     this.enemyBullets.clear(true, true)
-    this.enemyParent.destroy()
+    this.enemyGun.destroy()
+    this.enemySprite.destroy()
+    this.healthBar.destroy()
+
+    // Remove from the enemy list
+    const index = this.scene.enemies.indexOf(this)
+    if (index !== -1) {
+      this.scene.enemies.splice(index, 1)
+    }
   }
 }

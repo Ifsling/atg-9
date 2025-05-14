@@ -13,8 +13,9 @@ export class Player extends Phaser.GameObjects.Sprite {
 
 export type PlayerCharacter = Player
 
-export function setupPlayerParent(scene: MyGame) {
-  scene.PlayerParent = scene.add.container(1100, 100, [scene.player])
+export function setupPlayerParent(scene: MyGame, x: number, y: number) {
+  scene.player = createPlayer(scene, 0, 0)
+  scene.PlayerParent = scene.add.container(x, y, [scene.player])
   scene.physics.add.existing(scene.PlayerParent)
 
   scene.playerParentBody = scene.PlayerParent.body as Phaser.Physics.Arcade.Body

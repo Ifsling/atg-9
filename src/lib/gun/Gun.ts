@@ -59,13 +59,21 @@ export function handleGunThrow(scene: MyGame, cursors: CustomKeys) {
     scene.canPickupGun = true
 
     // Remove gun sprite from player
-    scene.PlayerParent.remove(scene!.currentGun!.sprite)
+    scene.PlayerParent.remove(scene.currentGun.sprite)
 
     // Clear current gun reference
     scene.currentGun = undefined
     scene.player.canShoot = false
 
-    scene.bullets.clear(true, true) // Destroys all bullets
-    scene.bullets.destroy() // Destroys the group itself
+    // Destroy bullet group
+    if (scene.bullets) {
+      scene.bullets.clear(true, true)
+      scene.bullets.destroy()
+      scene.bullets = scene.physics.add.group({
+        classType: Phaser.Physics.Arcade.Image,
+        maxSize: 0,
+        runChildUpdate: true,
+      })
+    }
   }
 }
