@@ -7,6 +7,7 @@ import {
   createPlayerBullets,
   handleCollisions,
   handleUi,
+  setupBloodParticleSystem,
   setupControls,
 } from "./HelperFunctions"
 import { createMap } from "./map/Map"
@@ -49,6 +50,7 @@ export class MyGame extends Phaser.Scene {
   gunsGroup!: Phaser.Physics.Arcade.Group
   playerHealthBackground!: Phaser.GameObjects.Graphics
   playerHealthBar!: Phaser.GameObjects.Graphics
+  isPlayerAlive: boolean = true
 
   enemies!: EnemyNew[]
   enemy1!: EnemyNew
@@ -58,6 +60,8 @@ export class MyGame extends Phaser.Scene {
   enemyBullets!: Phaser.Physics.Arcade.Group
   enemyShootTimer!: Phaser.Time.TimerEvent
   enemyGun!: Phaser.GameObjects.Sprite
+
+  bloodParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
 
   // global variables
   canPickupGun: boolean = true
@@ -78,6 +82,7 @@ export class MyGame extends Phaser.Scene {
     this.load.image("gun", "/images/gun.png")
     this.load.image("player-with-gun", "/images/player-with-gun.png")
     this.load.image("bullet", "/images/bullet.png")
+    this.load.image("particle", "/images/blood-drop.png")
   }
 
   create() {
@@ -111,6 +116,12 @@ export class MyGame extends Phaser.Scene {
 
     // UI
     handleUi(this)
+
+    // Particle Systems
+    setupBloodParticleSystem(this)
+
+    // this.bloodParticleSystem.explode(100, 100)
+    // particles.emitParticleAt(200, 100) // emit at impact location
   }
 
   // Modified MyGame update function with debug visualization

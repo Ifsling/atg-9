@@ -2,6 +2,7 @@
 import Phaser from "phaser"
 import { CustomKeys, MyGame } from "./MyGame"
 import { handleGunPickup } from "./gun/Gun"
+import { damagePlayer } from "./player/Player"
 
 export function setupControls(scene: Phaser.Scene): CustomKeys {
   return scene.input.keyboard!.addKeys({
@@ -46,38 +47,6 @@ export function handleCollisions(
     scene.physics.add.collider(scene.PlayerParent, enemy.enemySprite)
   })
 
-  // Player bullet hits enemy container
-  scene.enemies.forEach((enemy) => {
-    scene.physics.add.collider(scene.bullets, enemy.enemySprite)
-  })
-
-  scene.enemies.forEach((enemy) => {
-    console.log(scene.bullets)
-    console.log(enemy)
-    scene.physics.add.overlap(
-      scene.bullets,
-      enemy.enemyBullets,
-      (bullet, enemyBullet) => {
-        console.log("collision detected")
-        enemyBullet.destroy()
-        bullet.destroy()
-        enemy.takeDamage(10)
-      }
-    )
-  })
-
-  scene.enemies.forEach((enemy) => {
-    scene.physics.add.collider(
-      scene.bullets, // player bullets group
-      enemy.enemyBullets, // enemy's bullets group
-      (bullet, enemyBullet) => {
-        bullet.destroy()
-        enemyBullet.destroy()
-        enemy.takeDamage(10) // or whatever damage logic you want
-      }
-    )
-  })
-
   // Enemy bullet hits player
   scene.enemies.forEach((enemy) => {
     scene.physics.add.overlap(
@@ -88,9 +57,11 @@ export function handleCollisions(
         enemyBullet.destroy()
 
         // Damage the player
-        const playerParent = scene.PlayerParent as any
-        playerParent.health -= 10
-        scene.drawPlayerHealthBar(playerParent.health)
+        damagePlayer(scene, 40)
+
+        // const playerParent = scene.PlayerParent as any
+        // playerParent.health -= 10
+        // scene.drawPlayerHealthBar(playerParent.health)
       },
       undefined,
       scene
@@ -161,6 +132,38 @@ export function createPlayerBullets(scene: MyGame) {
     classType: Phaser.Physics.Arcade.Image,
     maxSize: scene.currentGun?.maxAmmo,
     runChildUpdate: true,
+  })
+}
+
+export function setupBloodParticleSystem(scene: MyGame) {
+  scene.bloodParticleSystem = scene.add.particles(100, 100, "particle", {
+    x: 100,
+    y: 100,
+    alpha: { start: 1, end: 0 },
+    angle: { min: 200, max: 300 }, // Downward spread (180 is straight down)
+    speed: { min: 200, max: 400 },
+    gravityY: 1000,
+    lifespan: 800,
+    quantity: 20,
+    scale: { start: 0.3, end: 0 },
+    blendMode: "NORMAL",
+    emitting: false,
+    emitZone: {
+      type: "edge",
+      source: new Phaser.Geom.Circle(0, 0, 20), // small circle around (x, y)
+      quantity: 20,
+      yoyo: true,
+    },
+  })
+
+  scene.bloodParticleSystem.addDeathZone({
+    type: "onLeave",
+    source: new Phaser.Geom.Rectangle(
+      0,
+      0,
+      scene.sys.canvas.width,
+      scene.sys.canvas.height
+    ),
   })
 }
 

@@ -13,6 +13,40 @@ export class Player extends Phaser.GameObjects.Sprite {
 
 export type PlayerCharacter = Player
 
+export function damagePlayer(scene: MyGame, damageAmount: number) {
+  const playerParent = scene.PlayerParent as any
+
+  if (playerParent.health > 0) {
+    playerParent.health -= damageAmount
+    scene.drawPlayerHealthBar(playerParent.health)
+
+    if (playerParent.health <= 0) {
+      damagePlayer(scene, 0)
+    }
+  } else {
+    scene.bloodParticleSystem.explode(
+      30,
+      scene.playerParentBody.x,
+      scene.playerParentBody.y
+    )
+
+    scene.isPlayerAlive = false
+    scene.player.destroy()
+    playerParent.destroy()
+    scene.playerParentBody.destroy()
+    if (scene.bullets) {
+      scene.bullets.clear(true, true)
+      scene.bullets.destroy()
+      scene.bullets = scene.physics.add.group({
+        classType: Phaser.Physics.Arcade.Image,
+        maxSize: 0,
+        runChildUpdate: true,
+      })
+    }
+    scene.drawPlayerHealthBar(playerParent.health)
+  }
+}
+
 export function setupPlayerParent(scene: MyGame, x: number, y: number) {
   scene.player = createPlayer(scene, 0, 0)
   scene.PlayerParent = scene.add.container(x, y, [scene.player])
@@ -48,6 +82,8 @@ export function handlePlayerMovement(
   cursors: CustomKeys,
   speed = 200
 ) {
+  if (!playerParent || !playerParent.body || !playerParent.active) return
+
   const body = playerParent.body as Phaser.Physics.Arcade.Body
   body.setVelocity(0)
 

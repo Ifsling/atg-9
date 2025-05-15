@@ -39,6 +39,8 @@ export class EnemyNew {
       callback: this.shootAtPlayer,
       callbackScope: this,
     })
+
+    console.log(this.enemySprite.body?.x, this.enemySprite.body?.y)
   }
 
   update(scene: MyGame) {
@@ -88,6 +90,8 @@ export class EnemyNew {
   }
 
   shootAtPlayer = () => {
+    if (this.scene.isPlayerAlive === false) return
+
     const player = this.scene.PlayerParent
 
     const angle = Phaser.Math.Angle.Between(
@@ -133,6 +137,12 @@ export class EnemyNew {
   }
 
   destroy() {
+    this.scene.bloodParticleSystem.explode(
+      30,
+      (this.enemySprite.body?.x || 0) - 35,
+      this.enemySprite.body?.y
+    )
+
     this.shootTimer.remove()
 
     this.enemyBullets.clear(true, true)
