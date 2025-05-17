@@ -1,3 +1,4 @@
+import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 
 export class EnemyNew {
@@ -9,9 +10,16 @@ export class EnemyNew {
   maxHealth: number = 100
   healthBar!: Phaser.GameObjects.Graphics
   shootTimer!: Phaser.Time.TimerEvent
+  shouldFollowPlayer: boolean = false
 
-  constructor(scene: MyGame, x: number = 1100, y: number = 300) {
+  constructor(
+    scene: MyGame,
+    x: number = 1100,
+    y: number = 300,
+    shouldFollowPlayer: boolean = false
+  ) {
     this.scene = scene
+    this.shouldFollowPlayer = shouldFollowPlayer
 
     // Create enemy sprite with physics
     this.enemySprite = scene.physics.add.sprite(x, y, "player").setScale(0.3)
@@ -40,7 +48,16 @@ export class EnemyNew {
       callbackScope: this,
     })
 
-    console.log(this.enemySprite.body?.x, this.enemySprite.body?.y)
+    if (shouldFollowPlayer) {
+      scene.time.addEvent({
+        delay: 1000, // every second
+        loop: true,
+        callback: () => {
+          if (!this.enemySprite?.active) return
+          this.startPathfinding(this.scene)
+        },
+      })
+    }
   }
 
   update(scene: MyGame) {
@@ -65,7 +82,7 @@ export class EnemyNew {
     this.drawHealthBar()
 
     // Stop movement unless you add pathfinding
-    this.enemySprite.setVelocity(0)
+    if (!this.shouldFollowPlayer) this.enemySprite.setVelocity(0)
   }
 
   // Draw or update the health bar above the enemy
@@ -92,13 +109,15 @@ export class EnemyNew {
   shootAtPlayer = () => {
     if (this.scene.isPlayerAlive === false) return
 
-    const player = this.scene.PlayerParent
+    const player = this.scene.isPlayerIncar
+      ? this.scene.carBeingDrivenByPlayer
+      : this.scene.PlayerParent
 
     const angle = Phaser.Math.Angle.Between(
       this.enemySprite.x,
       this.enemySprite.y,
-      player.x,
-      player.y
+      player!.x,
+      player!.y
     )
 
     const bullet = this.enemyBullets.get(
@@ -150,10 +169,100 @@ export class EnemyNew {
     this.enemySprite.destroy()
     this.healthBar.destroy()
 
-    // Remove from the enemy list
-    const index = this.scene.enemies.indexOf(this)
-    if (index !== -1) {
-      this.scene.enemies.splice(index, 1)
+    // Remove from global enemy list
+    const globalIndex = this.scene.enemies.indexOf(this)
+    if (globalIndex !== -1) {
+      this.scene.enemies.splice(globalIndex, 1)
     }
+
+    // Remove from mission-specific list
+    const missionIndex = this.scene.missionEnemies.indexOf(this)
+    if (missionIndex !== -1) {
+      this.scene.missionEnemies.splice(missionIndex, 1)
+    }
+
+    // Check if all mission enemies are dead
+    if (this.scene.missionStarted && this.scene.missionEnemies.length === 0) {
+      showTopLeftOverlayText(this.scene, "Mission Completed", 20, 70, 3000)
+    }
+  }
+
+  // Inside EnemyNew class
+  startPathfinding(scene: MyGame) {
+    const map = scene.make.tilemap({ key: "map" }) // or get from scene if stored
+    const tileSize = map.tileWidth // or hardcode if fixed, e.g. 32
+
+    const fromX = Math.floor(this.enemySprite.x / tileSize)
+    const fromY = Math.floor(this.enemySprite.y / tileSize)
+
+    const toX = Math.floor(scene.PlayerParent.x / tileSize)
+    const toY = Math.floor(scene.PlayerParent.y / tileSize)
+
+    scene.easystar.findPath(fromX, fromY, toX, toY, (path) => {
+      if (!this.enemySprite?.active) return
+
+      if (path && path.length > 0) {
+        this.followPath(path, tileSize, scene)
+      }
+    })
+
+    scene.easystar.calculate()
+  }
+
+  followPath(
+    path: { x: number; y: number }[],
+    tileSize: number,
+    scene: Phaser.Scene
+  ) {
+    if (path.length < 2) return
+
+    let step = 1
+
+    const moveToNextTile = () => {
+      if (step >= path.length) {
+        this.enemySprite.setVelocity(0)
+        return
+      }
+
+      const nextTile = path[step]
+      const targetX = nextTile.x * tileSize + tileSize / 2
+      const targetY = nextTile.y * tileSize + tileSize / 2
+
+      const angle = Phaser.Math.Angle.Between(
+        this.enemySprite.x,
+        this.enemySprite.y,
+        targetX,
+        targetY
+      )
+
+      const speed = 100
+      const velocityX = Math.cos(angle) * speed
+      const velocityY = Math.sin(angle) * speed
+
+      this.enemySprite.setVelocity(velocityX, velocityY)
+
+      // Check if close to the target tile, then go to next step
+      const checkArrival = scene.time.addEvent({
+        delay: 100,
+        loop: true,
+        callback: () => {
+          const dist = Phaser.Math.Distance.Between(
+            this.enemySprite.x,
+            this.enemySprite.y,
+            targetX,
+            targetY
+          )
+
+          if (dist < 8) {
+            this.enemySprite.setVelocity(0)
+            checkArrival.remove()
+            step++
+            moveToNextTile()
+          }
+        },
+      })
+    }
+
+    moveToNextTile()
   }
 }

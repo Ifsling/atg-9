@@ -1,6 +1,8 @@
 // src/utils/gameHelpers.ts
 import Phaser from "phaser"
-import { CustomKeys, MyGame } from "./MyGame"
+import { CustomKeys } from "./ConstantsAndTypes"
+import { MyGame } from "./MyGame"
+import { EnemyNew } from "./enemy/EnemyNew"
 import { handleGunPickup } from "./gun/Gun"
 import { damagePlayer } from "./player/Player"
 
@@ -15,17 +17,28 @@ export function setupControls(scene: Phaser.Scene): CustomKeys {
     leftArrow: Phaser.Input.Keyboard.KeyCodes.LEFT,
     rightArrow: Phaser.Input.Keyboard.KeyCodes.RIGHT,
     t: Phaser.Input.Keyboard.KeyCodes.T,
+    tilde: Phaser.Input.Keyboard.KeyCodes.BACKTICK,
+    f: Phaser.Input.Keyboard.KeyCodes.F,
   }) as CustomKeys
 }
 
 // Modified collision handling function
 export function handleCollisions(
   scene: MyGame,
-  houses: Phaser.Tilemaps.TilemapLayer | null = null
+  houses: Phaser.Tilemaps.TilemapLayer | null = null,
+  cursors: CustomKeys
 ) {
   if (houses) {
     scene.physics.add.collider(scene.PlayerParent, houses)
     scene.physics.add.collider(scene.gunsGroup, houses)
+
+    if (scene.carsGroup) {
+      scene.carsGroup.getChildren().forEach((car: any) => {
+        if (car.body) {
+          scene.physics.add.collider(car, houses)
+        }
+      })
+    }
 
     // Add collisions between enemy containers and houses
     scene.enemies.forEach((enemy) => {
@@ -57,11 +70,7 @@ export function handleCollisions(
         enemyBullet.destroy()
 
         // Damage the player
-        damagePlayer(scene, 40)
-
-        // const playerParent = scene.PlayerParent as any
-        // playerParent.health -= 10
-        // scene.drawPlayerHealthBar(playerParent.health)
+        damagePlayer(scene, 10)
       },
       undefined,
       scene
@@ -135,8 +144,8 @@ export function createPlayerBullets(scene: MyGame) {
   })
 }
 
-export function setupBloodParticleSystem(scene: MyGame) {
-  scene.bloodParticleSystem = scene.add.particles(100, 100, "particle", {
+export function setupParticleSystem(scene: MyGame) {
+  scene.bloodParticleSystem = scene.add.particles(100, 100, "blood-drop", {
     x: 100,
     y: 100,
     alpha: { start: 1, end: 0 },
@@ -156,14 +165,54 @@ export function setupBloodParticleSystem(scene: MyGame) {
     },
   })
 
-  scene.bloodParticleSystem.addDeathZone({
-    type: "onLeave",
-    source: new Phaser.Geom.Rectangle(
-      0,
-      0,
-      scene.sys.canvas.width,
-      scene.sys.canvas.height
-    ),
+  scene.missionMarkerPickedParticleSystem = scene.add.particles(
+    100,
+    100,
+    "diamond-shape", // make sure "coin" is a loaded texture key (spritesheet or image)
+    {
+      x: 100,
+      y: 100,
+      alpha: { start: 1, end: 0 }, // fade out
+      angle: { min: 250, max: 290 }, // slight spread upward
+      speed: { min: 100, max: 200 }, // upward velocity
+      gravityY: -200, // float up gently
+      lifespan: 800,
+      quantity: 10,
+      scale: { start: 0.2, end: 0 }, // shrink to nothing
+      rotate: { min: 0, max: 360 }, // rotate randomly
+      blendMode: "ADD",
+      emitting: false,
+      emitZone: {
+        type: "edge",
+        source: new Phaser.Geom.Circle(0, 0, 20),
+        quantity: 10,
+        yoyo: false,
+      },
+    }
+  )
+
+  // CREATE - Define the explosion particle system
+  scene.explosionParticleSystem = scene.add.particles(0, 0, "white-circle", {
+    x: 0,
+    y: 0,
+    speed: { min: 150, max: 400 }, // initial burst speed
+    angle: { min: 0, max: 360 },
+    scale: {
+      start: Phaser.Math.FloatBetween(0.5, 1.0), // some small, some big
+      end: Phaser.Math.FloatBetween(1.2, 2.0),
+    },
+    alpha: { start: 1, end: 0 },
+    lifespan: 800,
+    gravityY: 0,
+    quantity: 30,
+    tint: [0xff0000, 0xffa500, 0xffff00], // red, orange, yellow
+    blendMode: "ADD",
+    emitting: false,
+    emitZone: {
+      type: "edge",
+      source: new Phaser.Geom.Circle(0, 0, 30),
+      quantity: 30,
+    },
   })
 }
 
@@ -185,4 +234,172 @@ export function checkBulletAndEnemyCollision(scene: MyGame) {
       })
     })
   }
+
+  if (scene.bullets) {
+    scene.bullets.getChildren().forEach((b) => {
+      const bullet = b as Phaser.Physics.Arcade.Image
+      scene.missionEnemies.forEach((enemy) => {
+        const enemyTarget = enemy.enemySprite
+        if (
+          Phaser.Geom.Intersects.RectangleToRectangle(
+            bullet.getBounds(),
+            enemyTarget.getBounds()
+          )
+        ) {
+          bullet.destroy()
+          enemy.takeDamage(50)
+        }
+      })
+    })
+  }
+}
+
+export function addEnemyToTheScene(scene: MyGame, x: number, y: number) {
+  const enemy1 = new EnemyNew(scene, x, y)
+
+  scene.enemies.push(enemy1)
+}
+
+export function showCenteredOverlayText(
+  scene: Phaser.Scene,
+  message: string,
+  textColor: number = 0xffffff,
+  tintColor: number = 0x000000,
+  tintAlpha: number = 0.6
+): Phaser.GameObjects.Container {
+  // Create tint background
+  const tintBg = scene.add
+    .rectangle(
+      0,
+      0,
+      scene.scale.width,
+      scene.scale.height,
+      tintColor,
+      tintAlpha
+    )
+    .setOrigin(0)
+    .setScrollFactor(0)
+    .setDepth(10000)
+
+  // Create text in the center
+  const overlayText = scene.add
+    .text(scene.scale.width / 2, scene.scale.height / 2, message, {
+      fontSize: "64px",
+      color: `#${textColor.toString(16).padStart(6, "0")}`,
+      fontFamily: "Arial",
+      fontStyle: "bold",
+      align: "center",
+      stroke: "#000000",
+      strokeThickness: 6,
+    })
+    .setOrigin(0.5)
+    .setScrollFactor(0)
+    .setDepth(10001)
+
+  // Add both to a container
+  const overlayContainer = scene.add.container(0, 0, [tintBg, overlayText])
+  overlayContainer.setDepth(10000)
+
+  // Keep it responsive to resizes
+  scene.scale.on("resize", (gameSize: Phaser.Structs.Size) => {
+    const { width, height } = gameSize
+    tintBg.setSize(width, height)
+    overlayText.setPosition(width / 2, height / 2)
+  })
+
+  return overlayContainer
+}
+
+export function showTopLeftOverlayText(
+  scene: Phaser.Scene,
+  message: string,
+  x: number = 10,
+  y: number = 10,
+  destroyAfter: number = -1,
+  textColor: number = 0xffffff,
+  bgColor: number = 0x000000,
+  bgAlpha: number = 0.6,
+  padding: number = 10
+): {
+  container: Phaser.GameObjects.Container
+  updateMessage: (newMsg: string) => void
+} {
+  // Create text
+  const text = scene.add.text(0, 0, message, {
+    fontSize: "24px",
+    color: `#${textColor.toString(16).padStart(6, "0")}`,
+    fontFamily: "Arial",
+    fontStyle: "bold",
+    align: "left",
+    stroke: "#000000",
+    strokeThickness: 3,
+    wordWrap: { width: scene.scale.width / 2 },
+  })
+  text.setScrollFactor(0)
+
+  // Compute background size
+  const bgWidth = text.width + padding * 2
+  const bgHeight = text.height + padding * 2
+
+  // Create background
+  const background = scene.add.rectangle(
+    0,
+    0,
+    bgWidth,
+    bgHeight,
+    bgColor,
+    bgAlpha
+  )
+  background.setOrigin(0)
+  background.setScrollFactor(0)
+
+  // Position text inside the background
+  text.setPosition(padding, padding)
+
+  // Create container to hold both
+  const container = scene.add.container(x, y, [background, text])
+  container.setScrollFactor(0)
+  container.setDepth(10000)
+
+  // Method to update the message and resize the background
+  const updateMessage = (newMsg: string) => {
+    text.setText(newMsg)
+    background.setSize(text.width + padding * 2, text.height + padding * 2)
+  }
+
+  // Destroy after a delay
+  if (destroyAfter !== -1) {
+    scene.time.delayedCall(destroyAfter, () => {
+      container.destroy()
+    })
+  }
+
+  return { container, updateMessage }
+}
+
+export function createGridFromLayer(layer: Phaser.Tilemaps.TilemapLayer) {
+  const grid: number[][] = []
+
+  for (let y = 0; y < layer.layer.height; y++) {
+    const row: number[] = []
+    for (let x = 0; x < layer.layer.width; x++) {
+      const tile = layer.getTileAt(x, y)
+      if (!tile) {
+        // If no tile, treat as walkable (e.g., empty space)
+        row.push(0)
+      } else {
+        // Use tile index or id to mark walkable or not
+        // For example: 0 = walkable, any other = blocked
+        // Adjust based on your tileset indexes
+        // Here we assume tile.index === -1 means no tile => walkable
+        if (tile.index === -1) {
+          row.push(0) // walkable
+        } else {
+          row.push(1) // blocked
+        }
+      }
+    }
+    grid.push(row)
+  }
+  return grid
 }

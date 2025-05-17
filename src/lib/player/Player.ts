@@ -1,5 +1,7 @@
 import Phaser from "phaser"
-import { CustomKeys, MyGame } from "../MyGame"
+import { CustomKeys } from "../ConstantsAndTypes"
+import { showCenteredOverlayText } from "../HelperFunctions"
+import { MyGame } from "../MyGame"
 
 export class Player extends Phaser.GameObjects.Sprite {
   canShoot: boolean = false
@@ -44,6 +46,7 @@ export function damagePlayer(scene: MyGame, damageAmount: number) {
       })
     }
     scene.drawPlayerHealthBar(playerParent.health)
+    showCenteredOverlayText(scene, "GAME OVER")
   }
 }
 

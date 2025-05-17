@@ -1,4 +1,9 @@
+import EasyStar from "easystarjs"
 import { handleShooting } from "./bullet/Bullet"
+import { Car } from "./car/Car"
+import { handleCheatCodeSystem } from "./cheat-system/CheatSystem"
+import { CustomKeys, GunData, MISSIONS } from "./ConstantsAndTypes"
+import { SetupEasyStar } from "./easystar/Easystar"
 import { EnemyNew } from "./enemy/EnemyNew"
 import { handleGunRotation, handleGunThrow } from "./gun/Gun"
 import {
@@ -7,10 +12,12 @@ import {
   createPlayerBullets,
   handleCollisions,
   handleUi,
-  setupBloodParticleSystem,
   setupControls,
+  setupParticleSystem,
+  showTopLeftOverlayText,
 } from "./HelperFunctions"
 import { createMap } from "./map/Map"
+import { MissionMarker } from "./mission/MissionMarker"
 import { cameraFollowPlayer } from "./player/Camera"
 import {
   handlePlayerMovement,
@@ -18,27 +25,10 @@ import {
   setupPlayerParent,
 } from "./player/Player"
 
-export interface GunData {
-  sprite: Phaser.GameObjects.Sprite
-  ammo: number
-  fireRate: number
-  maxAmmo: number
-  gunType: string
-}
-
-export interface CustomKeys {
-  up: Phaser.Input.Keyboard.Key
-  down: Phaser.Input.Keyboard.Key
-  left: Phaser.Input.Keyboard.Key
-  right: Phaser.Input.Keyboard.Key
-  upArrow: Phaser.Input.Keyboard.Key
-  downArrow: Phaser.Input.Keyboard.Key
-  leftArrow: Phaser.Input.Keyboard.Key
-  rightArrow: Phaser.Input.Keyboard.Key
-  t: Phaser.Input.Keyboard.Key
-}
-
 export class MyGame extends Phaser.Scene {
+  easystar!: EasyStar.js
+  mapGrid!: number[][]
+
   bulletText!: Phaser.GameObjects.Text
   currentGun?: GunData
   player!: PlayerCharacter
@@ -51,8 +41,11 @@ export class MyGame extends Phaser.Scene {
   playerHealthBackground!: Phaser.GameObjects.Graphics
   playerHealthBar!: Phaser.GameObjects.Graphics
   isPlayerAlive: boolean = true
+  carsGroup!: Phaser.Physics.Arcade.Group
+  isPlayerIncar: boolean = false
+  carBeingDrivenByPlayer: Car | null = null
 
-  enemies!: EnemyNew[]
+  enemies: EnemyNew[] = []
   enemy1!: EnemyNew
   enemyParent!: Phaser.GameObjects.Container
   enemySprite!: Phaser.GameObjects.Sprite
@@ -62,6 +55,11 @@ export class MyGame extends Phaser.Scene {
   enemyGun!: Phaser.GameObjects.Sprite
 
   bloodParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
+  missionMarkerPickedParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
+  explosionParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
+
+  missionStarted: boolean = false
+  missionEnemies: EnemyNew[] = []
 
   // global variables
   canPickupGun: boolean = true
@@ -82,34 +80,25 @@ export class MyGame extends Phaser.Scene {
     this.load.image("gun", "/images/gun.png")
     this.load.image("player-with-gun", "/images/player-with-gun.png")
     this.load.image("bullet", "/images/bullet.png")
-    this.load.image("particle", "/images/blood-drop.png")
+    this.load.image("blood-drop", "/images/blood-drop.png")
+    this.load.image("diamond-shape", "/images/diamond-shape.png")
+    this.load.image("topdown-car", "/images/topdown-car.png")
+    this.load.image("white-circle", "/images/white-circle.png")
   }
 
   create() {
-    const { map, houses, roads, backgroundLayer } = createMap(this)
+    const { map, houses } = createMap(this)
     this.cursors = setupControls(this)
     this.gunsGroup = this.physics.add.group()
+
+    this.mapGrid = SetupEasyStar(this, houses!)
 
     addingGunstoMap(this)
 
     this.PlayerParent = setupPlayerParent(this, 1100, 300)
 
-    // Enemy
-    this.enemies = []
-    this.enemy1 = new EnemyNew(this, 1100, 100)
-    this.enemies.push(this.enemy1)
-
-    // For multiple enemies, you can create them like this:
-    // for (let i = 0; i < 3; i++) {
-    //   const enemy = new Enemy(this, 800 + i * 200, 100 + i * 100);
-    //   this.enemies.push(enemy);
-    // }
-
     // Bullet pool
     createPlayerBullets(this)
-
-    // Colliders
-    handleCollisions(this, houses)
 
     // Camera follows the container
     cameraFollowPlayer(this, map)
@@ -118,14 +107,36 @@ export class MyGame extends Phaser.Scene {
     handleUi(this)
 
     // Particle Systems
-    setupBloodParticleSystem(this)
+    setupParticleSystem(this)
 
-    // this.bloodParticleSystem.explode(100, 100)
-    // particles.emitParticleAt(200, 100) // emit at impact location
+    new MissionMarker(this, 1100, 400, () => {
+      showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
+
+      this.missionStarted = true
+
+      const missionKeys = Object.keys(MISSIONS) as Array<keyof typeof MISSIONS>
+      const randomIndex = Math.floor(Math.random() * missionKeys.length)
+      const randomMissionKey: keyof typeof MISSIONS = missionKeys[randomIndex]
+      const randomMission = MISSIONS[randomMissionKey]
+
+      randomMission(this)
+    })
+
+    this.carsGroup = this.physics.add.group()
+    const car = new Car(this, 1100, 500, "topdown-car", this.cursors)
+    this.carsGroup.add(car)
+
+    // // in update()
+    // this.carsGroup.getChildren().forEach((car: any) => car.update())
+
+    // Colliders
+    handleCollisions(this, houses, this.cursors)
   }
 
   // Modified MyGame update function with debug visualization
   update() {
+    handleCheatCodeSystem(this, this.cursors)
+
     this.bulletText.setText(`Bullets: ${this.currentGun?.ammo || 0}`)
     handlePlayerMovement(this.PlayerParent, this.cursors)
     handleGunRotation(this)
@@ -134,6 +145,10 @@ export class MyGame extends Phaser.Scene {
 
     // Update enemies
     this.enemies.forEach((enemy) => enemy.update(this))
+
+    // Car movement
+    if (this.carsGroup)
+      this.carsGroup.getChildren().forEach((car: any) => car.update())
 
     checkBulletAndEnemyCollision(this)
   }

@@ -1,4 +1,6 @@
-import { CustomKeys, MyGame } from "../MyGame"
+import { MyGame } from "../MyGame"
+
+import { CustomKeys } from "../ConstantsAndTypes"
 
 export function handleGunPickup(
   scene: MyGame,

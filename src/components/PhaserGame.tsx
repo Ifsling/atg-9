@@ -17,8 +17,11 @@ export default function PhaserGame() {
         default: "arcade",
         arcade: {
           gravity: { x: 0, y: 0 },
-          debug: false,
+          debug: true,
         },
+      },
+      dom: {
+        createContainer: true,
       },
       scene: [MyGame],
       parent: "phaser-container",
