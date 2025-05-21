@@ -151,8 +151,6 @@ export class EnemyNew {
     } else {
       this.drawHealthBar()
     }
-
-    console.log("Enemy took damage:", amount, "Remaining health:", this.health)
   }
 
   destroy() {
@@ -189,8 +187,7 @@ export class EnemyNew {
 
   // Inside EnemyNew class
   startPathfinding(scene: MyGame) {
-    const map = scene.make.tilemap({ key: "map" }) // or get from scene if stored
-    const tileSize = map.tileWidth // or hardcode if fixed, e.g. 32
+    const tileSize = this.scene.map.tileWidth
 
     const fromX = Math.floor(this.enemySprite.x / tileSize)
     const fromY = Math.floor(this.enemySprite.y / tileSize)

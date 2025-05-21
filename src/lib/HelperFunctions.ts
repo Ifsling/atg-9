@@ -4,6 +4,7 @@ import { CustomKeys } from "./ConstantsAndTypes"
 import { MyGame } from "./MyGame"
 import { EnemyNew } from "./enemy/EnemyNew"
 import { handleGunPickup } from "./gun/Gun"
+import { NPC } from "./npc/Npc"
 import { damagePlayer } from "./player/Player"
 
 export function setupControls(scene: Phaser.Scene): CustomKeys {
@@ -216,7 +217,7 @@ export function setupParticleSystem(scene: MyGame) {
   })
 }
 
-export function checkBulletAndEnemyCollision(scene: MyGame) {
+export function checkBulletAndOtherObjectsCollision(scene: MyGame) {
   if (scene.bullets) {
     scene.bullets.getChildren().forEach((b) => {
       const bullet = b as Phaser.Physics.Arcade.Image
@@ -248,6 +249,35 @@ export function checkBulletAndEnemyCollision(scene: MyGame) {
         ) {
           bullet.destroy()
           enemy.takeDamage(50)
+        }
+      })
+    })
+  }
+
+  if (scene.bullets) {
+    scene.bullets.getChildren().forEach((b) => {
+      const bullet = b as Phaser.Physics.Arcade.Image
+
+      scene.npcsGroup.getChildren().forEach((npcGO) => {
+        const npcSprite = npcGO as
+          | Phaser.Physics.Arcade.Sprite
+          | Phaser.GameObjects.Sprite
+
+        if (
+          Phaser.Geom.Intersects.RectangleToRectangle(
+            bullet.getBounds(),
+            npcSprite.getBounds()
+          )
+        ) {
+          bullet.destroy()
+
+          const npcInstance = npcSprite.getData("ref") as NPC | undefined
+
+          if (npcInstance && typeof npcInstance.takeDamage === "function") {
+            npcInstance.takeDamage(50)
+          } else {
+            console.warn("NPC instance not found on sprite data!")
+          }
         }
       })
     })
