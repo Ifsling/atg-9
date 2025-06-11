@@ -2,7 +2,7 @@ import EasyStar from "easystarjs"
 import { handleShooting } from "./bullet/Bullet"
 import { Car } from "./car/Car"
 import { handleCheatCodeSystem } from "./cheat-system/CheatSystem"
-import { CustomKeys, GunData, MISSIONS } from "./ConstantsAndTypes"
+import { CustomKeys, GunData } from "./ConstantsAndTypes"
 import { SetupEasyStar } from "./easystar/Easystar"
 import { EnemyNew } from "./enemy/EnemyNew"
 import { handleGunRotation, handleGunThrow } from "./gun/Gun"
@@ -14,10 +14,8 @@ import {
   handleUi,
   setupControls,
   setupParticleSystem,
-  showTopLeftOverlayText,
 } from "./HelperFunctions"
 import { createMap } from "./map/Map"
-import { MissionMarker } from "./mission/MissionMarker"
 import { NPC } from "./npc/Npc"
 import { cameraFollowPlayer } from "./player/Camera"
 import {
@@ -67,7 +65,6 @@ export class MyGame extends Phaser.Scene {
 
   // global variables
   canPickupGun: boolean = true
-  shootCooldown: number = 300
   maxBullets: number = 10
 
   constructor() {
@@ -81,7 +78,7 @@ export class MyGame extends Phaser.Scene {
       "/tiled-software-datas/tiled-tilemap-json.json"
     )
     this.load.image("player", "/images/player.png")
-    this.load.image("gun", "/images/gun.png")
+    this.load.image("pistol", "/images/pistol.png")
     this.load.image("player-with-gun", "/images/player-with-gun.png")
     this.load.image("bullet", "/images/bullet.png")
     this.load.image("blood-drop", "/images/blood-drop.png")
@@ -90,6 +87,14 @@ export class MyGame extends Phaser.Scene {
     this.load.image("white-circle", "/images/white-circle.png")
     this.load.image("npc", "/images/npc.png")
     this.load.audio("bgMusic", "/audio/bg-music.mp3")
+    this.load.image("shotgun", "/images/shotgun.png")
+    this.load.image("sniper", "/images/sniper.png")
+    this.load.image("smg", "/images/smg.png")
+    this.load.image("rocket-launcher", "/images/rocket-launcher.png")
+    this.load.image(
+      "rocket-launcher-bullet",
+      "/images/rocket-launcher-bullet.png"
+    )
   }
 
   create() {
@@ -127,18 +132,18 @@ export class MyGame extends Phaser.Scene {
     // Particle Systems
     setupParticleSystem(this)
 
-    new MissionMarker(this, 1100, 400, () => {
-      showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
+    // new MissionMarker(this, 1100, 400, () => {
+    //   showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
 
-      this.missionStarted = true
+    //   this.missionStarted = true
 
-      const missionKeys = Object.keys(MISSIONS) as Array<keyof typeof MISSIONS>
-      const randomIndex = Math.floor(Math.random() * missionKeys.length)
-      const randomMissionKey: keyof typeof MISSIONS = missionKeys[randomIndex]
-      const randomMission = MISSIONS[randomMissionKey]
+    //   const missionKeys = Object.keys(MISSIONS) as Array<keyof typeof MISSIONS>
+    //   const randomIndex = Math.floor(Math.random() * missionKeys.length)
+    //   const randomMissionKey: keyof typeof MISSIONS = missionKeys[randomIndex]
+    //   const randomMission = MISSIONS[randomMissionKey]
 
-      randomMission(this)
-    })
+    //   randomMission(this)
+    // })
 
     // const car = new Car(this, 1100, 500, "topdown-car", this.cursors)
     // this.carsGroup.add(car)

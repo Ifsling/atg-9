@@ -15,7 +15,7 @@ export function handleGunPickup(
   scene.player.canShoot = true
 
   const data = (gunSprite as any).gunData || {
-    ammo: 10,
+    ammo: 100,
     fireRate: 300,
     gunType: "default",
   }
@@ -26,11 +26,12 @@ export function handleGunPickup(
     fireRate: data.fireRate,
     maxAmmo: data.ammo,
     gunType: data.gunType,
+    damage: data.damage,
   }
 
   scene.bullets = scene.physics.add.group({
     classType: Phaser.Physics.Arcade.Image,
-    maxSize: data.ammo,
+    maxSize: 100,
     runChildUpdate: true,
   })
   scene.gunsGroup.remove(gunSprite, true, false)

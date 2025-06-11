@@ -81,11 +81,18 @@ export function handleCollisions(
   // Handle bullet collisions with world bounds
   scene.physics.world.on("worldbounds", (body: Phaser.Physics.Arcade.Body) => {
     const gameObject = body.gameObject
-    if (
-      gameObject &&
-      (gameObject as Phaser.GameObjects.Image).texture?.key === "bullet"
-    ) {
-      gameObject.destroy()
+    if (gameObject) {
+      const textureKey = (gameObject as Phaser.GameObjects.Image).texture?.key
+
+      if (textureKey === "bullet") {
+        gameObject.destroy()
+      }
+
+      if (textureKey === "rocket-launcher-bullet") {
+        const sprite = gameObject as Phaser.GameObjects.Image
+        scene.explosionParticleSystem.explode(10, sprite.x, sprite.y)
+        sprite.destroy()
+      }
     }
   })
 }
@@ -122,19 +129,51 @@ export function handleUi(scene: MyGame) {
 
 export function addingGunstoMap(scene: MyGame) {
   const gun1 = scene.physics.add
-    .sprite(1000, 500, "gun")
+    .sprite(1000, 500, "pistol")
     .setScale(0.1)
     .setOrigin(0.2, 0.7)
 
-  ;(gun1 as any).gunData = { ammo: 10, fireRate: 300, gunType: "pistol" }
+  ;(gun1 as any).gunData = {
+    ammo: 30,
+    fireRate: 300,
+    gunType: "pistol",
+    damage: 10,
+  }
 
   const gun2 = scene.physics.add
-    .sprite(1000, 900, "gun")
-    .setScale(0.1)
+    .sprite(1000, 900, "shotgun")
+    .setScale(0.3)
     .setOrigin(0.2, 0.7)
-  ;(gun2 as any).gunData = { ammo: 30, fireRate: 100, gunType: "rifle" }
+  ;(gun2 as any).gunData = {
+    ammo: 5,
+    fireRate: 1000,
+    gunType: "shotgun",
+    damage: 12,
+  }
 
-  scene.gunsGroup.addMultiple([gun1, gun2])
+  const gun3 = scene.physics.add
+    .sprite(1200, 500, "smg")
+    .setScale(0.3)
+    .setOrigin(0.2, 0.7)
+  ;(gun3 as any).gunData = {
+    ammo: 50,
+    fireRate: 100,
+    gunType: "smg",
+    damage: 10,
+  }
+
+  const gun4 = scene.physics.add
+    .sprite(1200, 900, "rocket-launcher")
+    .setScale(0.2)
+    .setOrigin(0.2, 0.7)
+  ;(gun4 as any).gunData = {
+    ammo: 5,
+    fireRate: 1000,
+    gunType: "rocket-launcher",
+    damage: 90,
+  }
+
+  scene.gunsGroup.addMultiple([gun1, gun2, gun3, gun4])
 }
 
 export function createPlayerBullets(scene: MyGame) {
@@ -218,70 +257,65 @@ export function setupParticleSystem(scene: MyGame) {
 }
 
 export function checkBulletAndOtherObjectsCollision(scene: MyGame) {
-  if (scene.bullets) {
-    scene.bullets.getChildren().forEach((b) => {
-      const bullet = b as Phaser.Physics.Arcade.Image
-      scene.enemies.forEach((enemy) => {
-        const enemyTarget = enemy.enemySprite
-        if (
-          Phaser.Geom.Intersects.RectangleToRectangle(
-            bullet.getBounds(),
-            enemyTarget.getBounds()
-          )
-        ) {
-          bullet.destroy()
-          enemy.takeDamage(50)
-        }
-      })
-    })
+  if (!scene.bullets) return
+
+  const damageAmount = scene.currentGun?.damage || 10
+
+  const checkCollision = (
+    bullet: Phaser.Physics.Arcade.Image,
+    targetSprite: Phaser.GameObjects.Sprite | Phaser.Physics.Arcade.Sprite,
+    takeDamageFn: () => void
+  ) => {
+    if (
+      Phaser.Geom.Intersects.RectangleToRectangle(
+        bullet.getBounds(),
+        targetSprite.getBounds()
+      )
+    ) {
+      const textureKey = bullet.texture?.key
+
+      if (textureKey === "rocket-launcher-bullet") {
+        scene.explosionParticleSystem.explode(10, bullet.x, bullet.y)
+      }
+
+      bullet.destroy()
+      takeDamageFn()
+    }
   }
 
-  if (scene.bullets) {
-    scene.bullets.getChildren().forEach((b) => {
-      const bullet = b as Phaser.Physics.Arcade.Image
-      scene.missionEnemies.forEach((enemy) => {
-        const enemyTarget = enemy.enemySprite
-        if (
-          Phaser.Geom.Intersects.RectangleToRectangle(
-            bullet.getBounds(),
-            enemyTarget.getBounds()
-          )
-        ) {
-          bullet.destroy()
-          enemy.takeDamage(50)
-        }
-      })
+  scene.bullets.getChildren().forEach((b) => {
+    const bullet = b as Phaser.Physics.Arcade.Image
+
+    // Enemies
+    scene.enemies.forEach((enemy) => {
+      checkCollision(bullet, enemy.enemySprite, () =>
+        enemy.takeDamage(damageAmount)
+      )
     })
-  }
 
-  if (scene.bullets) {
-    scene.bullets.getChildren().forEach((b) => {
-      const bullet = b as Phaser.Physics.Arcade.Image
-
-      scene.npcsGroup.getChildren().forEach((npcGO) => {
-        const npcSprite = npcGO as
-          | Phaser.Physics.Arcade.Sprite
-          | Phaser.GameObjects.Sprite
-
-        if (
-          Phaser.Geom.Intersects.RectangleToRectangle(
-            bullet.getBounds(),
-            npcSprite.getBounds()
-          )
-        ) {
-          bullet.destroy()
-
-          const npcInstance = npcSprite.getData("ref") as NPC | undefined
-
-          if (npcInstance && typeof npcInstance.takeDamage === "function") {
-            npcInstance.takeDamage(50)
-          } else {
-            console.warn("NPC instance not found on sprite data!")
-          }
-        }
-      })
+    // Mission enemies
+    scene.missionEnemies.forEach((enemy) => {
+      checkCollision(bullet, enemy.enemySprite, () =>
+        enemy.takeDamage(damageAmount)
+      )
     })
-  }
+
+    // NPCs
+    scene.npcsGroup.getChildren().forEach((npcGO) => {
+      const npcSprite = npcGO as
+        | Phaser.Physics.Arcade.Sprite
+        | Phaser.GameObjects.Sprite
+      const npcInstance = npcSprite.getData("ref") as NPC | undefined
+
+      if (npcInstance && typeof npcInstance.takeDamage === "function") {
+        checkCollision(bullet, npcSprite, () =>
+          npcInstance.takeDamage(damageAmount)
+        )
+      } else {
+        console.warn("NPC instance not found on sprite data!")
+      }
+    })
+  })
 }
 
 export function addEnemyToTheScene(scene: MyGame, x: number, y: number) {

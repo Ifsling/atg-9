@@ -1,7 +1,13 @@
-import { MissionOne_KillSquad } from "./mission/MissionOne"
 import { MissionTwo_KillSquad } from "./mission/MissionTwo"
 
 export const TILE_SIZE = 300
+
+export type GunTypes =
+  | "pistol"
+  | "shotgun"
+  | "rocket-launcher"
+  | "sniper"
+  | "smg"
 
 export interface GunData {
   sprite: Phaser.GameObjects.Sprite
@@ -9,6 +15,7 @@ export interface GunData {
   fireRate: number
   maxAmmo: number
   gunType: string
+  damage: number
 }
 
 export interface CustomKeys {
