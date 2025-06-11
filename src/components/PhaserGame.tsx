@@ -2,11 +2,17 @@
 "use client"
 
 import Phaser from "phaser"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { MyGame } from "../lib/MyGame"
+import MenuScreen from "./MenuScreen"
+
+type GameStates = "menu" | "gameplay" | "gameOver"
 
 export default function PhaserGame() {
   const gameRef = useRef<Phaser.Game | null>(null)
+
+  const [currentGameState, setCurrentGameState] =
+    useState<GameStates>("gameplay")
 
   useEffect(() => {
     const config = {
@@ -17,7 +23,7 @@ export default function PhaserGame() {
         default: "arcade",
         arcade: {
           gravity: { x: 0, y: 0 },
-          debug: true,
+          debug: false,
         },
       },
       dom: {
@@ -53,5 +59,15 @@ export default function PhaserGame() {
     }
   }, [])
 
-  return <div id="phaser-container" />
+  if (currentGameState === "menu") {
+    return (
+      <MenuScreen
+        onStartGame={() => {
+          setCurrentGameState("gameplay")
+        }}
+      />
+    )
+  } else if (currentGameState === "gameplay") {
+    return <div id="phaser-container" />
+  }
 }

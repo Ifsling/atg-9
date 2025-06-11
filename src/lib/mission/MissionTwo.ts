@@ -11,7 +11,7 @@ export function MissionTwo_KillSquad(scene: MyGame) {
 
   // do something after 2 minutes
   scene.time.addEvent({
-    delay: 4000,
+    delay: 40000,
     callback: () => {
       scene.missionStarted = false
 

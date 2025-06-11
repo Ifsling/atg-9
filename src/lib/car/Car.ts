@@ -201,6 +201,11 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
       (this.body?.y || 0) + 50
     )
 
+    // Play explosion sound
+    const explosionAudio = new Audio("/audio/big-explosion.flac")
+    explosionAudio.volume = 0.5
+    explosionAudio.play()
+
     // Remove car from the scene
     this.destroy()
   }

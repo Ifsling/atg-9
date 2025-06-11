@@ -46,6 +46,10 @@ export function damagePlayer(scene: MyGame, damageAmount: number) {
       })
     }
     scene.drawPlayerHealthBar(playerParent.health)
+
+    const deathAudio = new Audio("/audio/death.wav")
+    deathAudio.play()
+
     showCenteredOverlayText(scene, "GAME OVER")
   }
 }

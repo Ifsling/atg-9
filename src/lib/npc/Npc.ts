@@ -129,9 +129,17 @@ export class NPC {
   }
 
   destroy() {
+    this.scene.bloodParticleSystem.explode(
+      40,
+      (this.sprite.x || 0) - 100,
+      (this.sprite.y || 0) - 100
+    )
+
+    const deathAudio = new Audio("/audio/explosion.wav")
+    deathAudio.play()
+
     this.sprite.destroy()
     this.healthBar.destroy()
-    // Optional: Add explosion or sound
   }
 
   // Inside NPC class

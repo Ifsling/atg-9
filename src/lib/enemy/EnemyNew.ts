@@ -154,6 +154,9 @@ export class EnemyNew {
   }
 
   destroy() {
+    const deathAudio = new Audio("/audio/explosion.wav")
+    deathAudio.play()
+
     this.scene.bloodParticleSystem.explode(
       30,
       (this.enemySprite.body?.x || 0) - 35,

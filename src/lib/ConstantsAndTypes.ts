@@ -26,7 +26,7 @@ export interface CustomKeys {
 }
 
 export const MISSIONS = {
-  KILL_SQUAD: MissionOne_KillSquad,
+  // KILL_SQUAD: MissionOne_KillSquad,
   RUN_FROM_SQUAD: MissionTwo_KillSquad,
 }
 
