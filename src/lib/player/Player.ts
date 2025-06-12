@@ -2,10 +2,10 @@ import Phaser from "phaser"
 import { CustomKeys } from "../ConstantsAndTypes"
 import { showCenteredOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
+import { isCheatConsoleOpen } from "../cheat-system/CheatSystem"
 
 export class Player extends Phaser.GameObjects.Sprite {
   canShoot: boolean = false
-  health: number = 100
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
     super(scene, x, y, texture)
@@ -69,7 +69,7 @@ export function setupPlayerParent(scene: MyGame, x: number, y: number) {
     -scene.player.displayWidth / 2,
     -scene.player.displayHeight / 2
   )
-  ;(scene.PlayerParent as any).health = 100
+  ;(scene.PlayerParent as any).health = 30
 
   return scene.PlayerParent
 }
@@ -90,6 +90,10 @@ export function handlePlayerMovement(
   speed = 200
 ) {
   if (!playerParent || !playerParent.body || !playerParent.active) return
+
+  if (isCheatConsoleOpen()) {
+    return
+  }
 
   const body = playerParent.body as Phaser.Physics.Arcade.Body
   body.setVelocity(0)

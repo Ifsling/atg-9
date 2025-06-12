@@ -1,4 +1,5 @@
 import { CustomKeys } from "../ConstantsAndTypes"
+import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 
 let consoleOpen = false
@@ -15,70 +16,213 @@ export function handleCheatCodeSystem(scene: MyGame, cursors: CustomKeys) {
   }
 }
 
+export function isCheatConsoleOpen(): boolean {
+  return consoleOpen
+}
+
 function openCheatConsole(scene: MyGame) {
   consoleOpen = true
-
-  // Disable keyboard input so WASD doesn’t trigger player movement
-  scene!.input!.keyboard!.enabled = false
 
   const width = scene.scale.width
   const height = scene.scale.height
 
-  // Wrap input in a div to center it better
+  // Create overlay background that can be clicked to close
+  const overlay = scene.add.rectangle(
+    0,
+    0,
+    width * 2,
+    height * 2,
+    0x000000,
+    0.5
+  )
+  overlay.setOrigin(0)
+  overlay.setScrollFactor(0)
+  overlay.setDepth(9999)
+  overlay.setInteractive()
+
+  // Close console when clicking outside
+  overlay.on("pointerdown", () => {
+    closeCheatConsole(scene)
+  })
+
+  // Create input element
   inputElement = scene.add.dom(width / 2, height / 2).createFromHTML(`
-    <div style="display: flex; justify-content: center; align-items: center;">
+    <div style="
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10000;
+    ">
       <input id="cheatInput" type="text" 
         placeholder="Enter cheat code..." 
         style="
-          width: 60vw; 
+          width: 400px;
+          max-width: 80vw;
           font-size: 24px;
-          padding: 10px;
+          padding: 15px;
           background: black;
           color: lime;
           border: 2px solid lime;
-          border-radius: 5px;
+          border-radius: 8px;
           outline: none;
           text-align: center;
+          box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
         "
       />
     </div>
   `)
 
-  inputElement.setOrigin(0.5)
+  inputElement.setOrigin(0.5, 0.5)
+  inputElement.setDepth(10000)
+  inputElement.setScrollFactor(0)
 
-  // Wait for DOM to render before calling focus
-  scene.time.delayedCall(10, () => {
+  // Store overlay reference so we can destroy it later
+  ;(inputElement as any).overlay = overlay
+
+  // Focus the input after a brief delay
+  scene.time.delayedCall(50, () => {
     const input = inputElement?.getChildByID("cheatInput") as HTMLInputElement
     if (input) {
       input.focus()
-      input.addEventListener("keydown", (e: KeyboardEvent) => {
+
+      // Handle input events
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // Stop event from bubbling to Phaser
+        e.stopPropagation()
+
         if (e.key === "Enter") {
+          e.preventDefault()
           const value = input.value.trim()
           if (value.length > 0) {
             console.log("Cheat Code Entered:", value)
+            processCheatCode(scene, value)
           }
           closeCheatConsole(scene)
-        } else if (e.key === "Escape") {
+        } else if (e.key === "Escape" || e.key === "`" || e.key === "~") {
+          e.preventDefault()
           closeCheatConsole(scene)
         }
-      })
+        // Allow normal typing for other keys
+      }
+
+      // Handle input blur (when clicking outside)
+      const handleBlur = () => {
+        // Small delay to prevent immediate closing when clicking input
+        scene.time.delayedCall(100, () => {
+          if (consoleOpen) {
+            closeCheatConsole(scene)
+          }
+        })
+      }
+
+      input.addEventListener("keydown", handleKeyDown)
+      input.addEventListener("blur", handleBlur)
+
+      // Store event handlers for cleanup
+      ;(input as any)._keydownHandler = handleKeyDown
+      ;(input as any)._blurHandler = handleBlur
     }
   })
 
   // Re-center on resize
-  scene.scale.on("resize", () => {
-    if (inputElement) {
+  const resizeHandler = () => {
+    if (inputElement && overlay) {
       const { width, height } = scene.scale
       inputElement.setPosition(width / 2, height / 2)
+      overlay.setSize(width * 2, height * 2)
     }
-  })
+  }
+
+  scene.scale.on("resize", resizeHandler)
+  ;(inputElement as any)._resizeHandler = resizeHandler
 }
 
 function closeCheatConsole(scene: MyGame) {
   if (inputElement) {
+    // Clean up input event listeners
+    const input = inputElement.getChildByID("cheatInput") as HTMLInputElement
+    if (input) {
+      const keydownHandler = (input as any)._keydownHandler
+      const blurHandler = (input as any)._blurHandler
+
+      if (keydownHandler) {
+        input.removeEventListener("keydown", keydownHandler)
+      }
+      if (blurHandler) {
+        input.removeEventListener("blur", blurHandler)
+      }
+    }
+
+    // Clean up resize handler
+    const resizeHandler = (inputElement as any)._resizeHandler
+    if (resizeHandler) {
+      scene.scale.off("resize", resizeHandler)
+    }
+
+    // Destroy overlay
+    const overlay = (inputElement as any).overlay
+    if (overlay) {
+      overlay.destroy()
+    }
+
+    // Destroy input element
     inputElement.destroy()
     inputElement = null
   }
+
   consoleOpen = false
-  scene!.input!.keyboard!.enabled = true
+}
+
+function processCheatCode(scene: MyGame, code: string) {
+  switch (code.toLowerCase()) {
+    case "atglifemod":
+      ;(scene.PlayerParent as any).health = 100
+      scene.drawPlayerHealthBar(100)
+      showTopLeftOverlayText(
+        scene,
+        "Cheat activated: Full Health",
+        10,
+        70,
+        5000
+      )
+      break
+
+    case "godmode":
+      ;(scene.PlayerParent as any).health = 1000
+      scene.drawPlayerHealthBar(1000)
+      showTopLeftOverlayText(scene, "Cheat activated: God Mode", 10, 70, 5000)
+      break
+
+    case "ammo":
+      if (scene.currentGun) {
+        scene.currentGun.ammo = scene.currentGun.maxAmmo
+        showTopLeftOverlayText(
+          scene,
+          "Cheat activated: Full Ammo",
+          10,
+          70,
+          5000
+        )
+      }
+      break
+
+    case "weapons":
+      // Give all weapons
+      showTopLeftOverlayText(
+        scene,
+        "Cheat activated: All Weapons",
+        10,
+        70,
+        5000
+      )
+      break
+
+    default:
+      showTopLeftOverlayText(scene, `Unknown cheat code: ${code}`, 10, 70, 3000)
+      break
+  }
 }
