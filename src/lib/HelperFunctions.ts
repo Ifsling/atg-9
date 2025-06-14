@@ -35,6 +35,7 @@ export function setupControls(scene: Phaser.Scene): CustomKeys {
 export function handleCollisions(
   scene: MyGame,
   houses: Phaser.Tilemaps.TilemapLayer | null = null,
+  water: Phaser.Tilemaps.TilemapLayer | null = null,
   cursors: CustomKeys
 ) {
   if (houses) {
@@ -53,6 +54,17 @@ export function handleCollisions(
     scene.enemies.forEach((enemy) => {
       scene.physics.add.collider(enemy.enemySprite, houses)
     })
+  }
+
+  if (water) {
+    scene.physics.add.collider(scene.PlayerParent, water)
+    if (scene.carsGroup) {
+      scene.carsGroup.getChildren().forEach((car: any) => {
+        if (car.body) {
+          scene.physics.add.collider(car, water)
+        }
+      })
+    }
   }
 
   // Gun pickup overlap

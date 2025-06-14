@@ -105,7 +105,6 @@ function openCheatConsole(scene: MyGame) {
           e.preventDefault()
           const value = input.value.trim()
           if (value.length > 0) {
-            console.log("Cheat Code Entered:", value)
             processCheatCode(scene, value)
           }
           closeCheatConsole(scene)

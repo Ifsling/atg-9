@@ -64,6 +64,8 @@ export class MyGame extends Phaser.Scene {
   missionStarted: boolean = false
   missionEnemies: EnemyNew[] = []
 
+  wantedLevel: number = 0
+
   npcsGroup!: Phaser.Physics.Arcade.Group
 
   weaponCheatActivation: {
@@ -85,11 +87,8 @@ export class MyGame extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("tileset", "/tiled-software-datas/map-tileset/tileset.png")
-    this.load.tilemapTiledJSON(
-      "map",
-      "/tiled-software-datas/tiled-tilemap-json.json"
-    )
+    this.load.image("tileset", "/map-elements/tileset.png")
+    this.load.tilemapTiledJSON("map", "/map-elements/tiled-tilemap-json.json")
     this.load.image("player", "/images/player.png")
     this.load.image("pistol", "/images/pistol.png")
     this.load.image("player-with-gun", "/images/player-with-gun.png")
@@ -121,7 +120,7 @@ export class MyGame extends Phaser.Scene {
 
     // music.play()
 
-    const { map, houses } = createMap(this)
+    const { map, houses, roads, backgroundLayer, water } = createMap(this)
     this.map = map
 
     this.cursors = setupControls(this)
@@ -166,7 +165,7 @@ export class MyGame extends Phaser.Scene {
     }
     ;``
     // Colliders
-    handleCollisions(this, houses, this.cursors)
+    handleCollisions(this, houses, water, this.cursors)
     this.drawPlayerHealthBar((this.PlayerParent as any).health)
   }
 

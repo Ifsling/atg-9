@@ -9,11 +9,10 @@ export function SetupEasyStar(
   scene.easystar = new EasyStar.js()
 
   const grid = createGridFromLayer(acceptableLayer!)
+
   scene.easystar.setGrid(grid)
   scene.easystar.setAcceptableTiles([0])
   scene.easystar.enableDiagonals()
-
-  console.log(grid)
 
   return grid
 }

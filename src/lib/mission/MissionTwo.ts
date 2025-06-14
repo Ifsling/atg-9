@@ -15,7 +15,6 @@ export function MissionTwo_KillSquad(scene: MyGame) {
     callback: () => {
       scene.missionStarted = false
 
-      console.log("Mission time complete!")
       showTopLeftOverlayText(scene, "Mission Completed", 10, 70, 3000)
 
       // Clone array to avoid mutation during iteration
@@ -24,8 +23,6 @@ export function MissionTwo_KillSquad(scene: MyGame) {
       enemiesToDestroy.forEach((enemy) => {
         enemy.destroy()
       })
-
-      console.log(scene.missionEnemies)
 
       // Maybe trigger a cutscene or next mission
     },
@@ -64,7 +61,6 @@ export function MissionTwo_KillSquad(scene: MyGame) {
         enemy.enemyBullets,
         car,
         (carGameObject, bullet) => {
-          console.log("COLLIDEDDDDDDDD")
           const enemyBullet = bullet as Phaser.Physics.Arcade.Image
           enemyBullet.destroy()
 

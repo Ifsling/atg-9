@@ -158,8 +158,6 @@ export class NPC {
       return
     }
 
-    console.log("REACHEDDD")
-
     const tileSize = this.scene.map.tileWidth
 
     const fromX = Math.floor(this.sprite.x / tileSize)
@@ -171,7 +169,6 @@ export class NPC {
     scene.easystar.findPath(fromX, fromY, toX, toY, (path) => {
       if (!this.sprite?.active) return
       if (path && path.length > 0) {
-        console.log("HEREEE hehe")
         this.followPath(path, tileSize, scene)
       }
     })
@@ -184,7 +181,6 @@ export class NPC {
     tileSize: number,
     scene: Phaser.Scene
   ) {
-    console.log("INSIDE FOLLOW PATH")
     if (path.length < 2) return
 
     let step = 1

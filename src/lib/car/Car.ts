@@ -53,8 +53,6 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
         enemy.enemyBullets,
         this,
         (car, enemyBullet) => {
-          console.log({ enemyBullet, car })
-
           const bullet = enemyBullet as Phaser.Physics.Arcade.Image
           enemyBullet.destroy()
           this.takeDamage(10)
