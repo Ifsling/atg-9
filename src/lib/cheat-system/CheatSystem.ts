@@ -1,4 +1,11 @@
 import { CustomKeys } from "../ConstantsAndTypes"
+import {
+  SpawnPistol,
+  SpawnRocketLauncher,
+  SpawnShotgun,
+  SpawnSMG,
+} from "../gun/GenerateGuns"
+import { handleGunPickup } from "../gun/Gun"
 import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 
@@ -212,6 +219,7 @@ function processCheatCode(scene: MyGame, code: string) {
 
     case "weapons":
       // Give all weapons
+      handleWeaponsCheatSystem(scene)
       showTopLeftOverlayText(
         scene,
         "Cheat activated: All Weapons",
@@ -225,4 +233,39 @@ function processCheatCode(scene: MyGame, code: string) {
       showTopLeftOverlayText(scene, `Unknown cheat code: ${code}`, 10, 70, 3000)
       break
   }
+}
+
+export function handleWeaponsCheatSystem(scene: MyGame) {
+  const pistonSprite = SpawnPistol(scene, 0, 0)
+  const smgSprite = SpawnSMG(scene, 0, 0)
+  const shotgunSprite = SpawnShotgun(scene, 0, 0)
+  const rocketLauncherSprite = SpawnRocketLauncher(scene, 0, 0)
+
+  const gunSprites = [
+    pistonSprite,
+    smgSprite,
+    shotgunSprite,
+    rocketLauncherSprite,
+  ]
+
+  if (scene.weaponCheatActivation.sprite) {
+    scene.weaponCheatActivation.sprite.destroy()
+  }
+
+  if (scene.weaponCheatActivation.status === false) {
+    scene.weaponCheatActivation = {
+      status: true,
+      index: 0,
+      sprite: gunSprites[0],
+    }
+  } else {
+    // If already activated, cycle through weapons
+    scene.weaponCheatActivation.index =
+      (scene.weaponCheatActivation.index + 1) % 4
+    scene.weaponCheatActivation.sprite =
+      gunSprites[scene.weaponCheatActivation.index]
+  }
+
+  scene.canPickupGun = true
+  handleGunPickup(scene, gunSprites[scene.weaponCheatActivation.index])
 }

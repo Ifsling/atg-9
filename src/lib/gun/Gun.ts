@@ -6,8 +6,6 @@ export function handleGunPickup(
   scene: MyGame,
   gunSprite: Phaser.GameObjects.Sprite
 ) {
-  scene.player.canShoot = true
-
   // already picked up one
   if (!scene.canPickupGun) return
   scene.canPickupGun = false
@@ -34,8 +32,10 @@ export function handleGunPickup(
     maxSize: 100,
     runChildUpdate: true,
   })
-  scene.gunsGroup.remove(gunSprite, true, false)
 
+  if (scene.gunsGroup.contains(gunSprite)) {
+    scene.gunsGroup.remove(gunSprite, true, false)
+  }
   scene.PlayerParent.add(scene.currentGun.sprite)
   scene.currentGun.sprite.setPosition(40, 40)
 }

@@ -2,7 +2,14 @@
 import Phaser from "phaser"
 import { CustomKeys } from "./ConstantsAndTypes"
 import { MyGame } from "./MyGame"
+import { handleWeaponsCheatSystem } from "./cheat-system/CheatSystem"
 import { EnemyNew } from "./enemy/EnemyNew"
+import {
+  SpawnPistol,
+  SpawnRocketLauncher,
+  SpawnShotgun,
+  SpawnSMG,
+} from "./gun/GenerateGuns"
 import { handleGunPickup } from "./gun/Gun"
 import { NPC } from "./npc/Npc"
 import { damagePlayer } from "./player/Player"
@@ -20,6 +27,7 @@ export function setupControls(scene: Phaser.Scene): CustomKeys {
     t: Phaser.Input.Keyboard.KeyCodes.T,
     tilde: Phaser.Input.Keyboard.KeyCodes.BACKTICK,
     f: Phaser.Input.Keyboard.KeyCodes.F,
+    n: Phaser.Input.Keyboard.KeyCodes.N,
   }) as CustomKeys
 }
 
@@ -128,50 +136,10 @@ export function handleUi(scene: MyGame) {
 }
 
 export function addingGunstoMap(scene: MyGame) {
-  const gun1 = scene.physics.add
-    .sprite(1000, 500, "pistol")
-    .setScale(0.1)
-    .setOrigin(0.2, 0.7)
-
-  ;(gun1 as any).gunData = {
-    ammo: 30,
-    fireRate: 300,
-    gunType: "pistol",
-    damage: 10,
-  }
-
-  const gun2 = scene.physics.add
-    .sprite(1000, 900, "shotgun")
-    .setScale(0.3)
-    .setOrigin(0.2, 0.7)
-  ;(gun2 as any).gunData = {
-    ammo: 5,
-    fireRate: 1000,
-    gunType: "shotgun",
-    damage: 12,
-  }
-
-  const gun3 = scene.physics.add
-    .sprite(1200, 500, "smg")
-    .setScale(0.3)
-    .setOrigin(0.2, 0.7)
-  ;(gun3 as any).gunData = {
-    ammo: 50,
-    fireRate: 100,
-    gunType: "smg",
-    damage: 10,
-  }
-
-  const gun4 = scene.physics.add
-    .sprite(1200, 900, "rocket-launcher")
-    .setScale(0.2)
-    .setOrigin(0.2, 0.7)
-  ;(gun4 as any).gunData = {
-    ammo: 5,
-    fireRate: 1000,
-    gunType: "rocket-launcher",
-    damage: 90,
-  }
+  const gun1 = SpawnPistol(scene, 1000, 500)
+  const gun2 = SpawnShotgun(scene, 1000, 900)
+  const gun3 = SpawnSMG(scene, 1200, 500)
+  const gun4 = SpawnRocketLauncher(scene, 1200, 900)
 
   scene.gunsGroup.addMultiple([gun1, gun2, gun3, gun4])
 }
@@ -466,4 +434,12 @@ export function createGridFromLayer(layer: Phaser.Tilemaps.TilemapLayer) {
     grid.push(row)
   }
   return grid
+}
+
+export function detectWeaponCheatWeaponChange(scene: MyGame) {
+  if (scene.weaponCheatActivation.status) {
+    if (Phaser.Input.Keyboard.JustDown(scene.cursors.n)) {
+      handleWeaponsCheatSystem(scene)
+    }
+  }
 }

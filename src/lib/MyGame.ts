@@ -10,6 +10,7 @@ import {
   addingGunstoMap,
   checkBulletAndOtherObjectsCollision,
   createPlayerBullets,
+  detectWeaponCheatWeaponChange,
   handleCollisions,
   handleUi,
   setupControls,
@@ -64,6 +65,16 @@ export class MyGame extends Phaser.Scene {
   missionEnemies: EnemyNew[] = []
 
   npcsGroup!: Phaser.Physics.Arcade.Group
+
+  weaponCheatActivation: {
+    status: boolean
+    index: number
+    sprite: Phaser.GameObjects.Sprite | null
+  } = {
+    status: false,
+    index: 0,
+    sprite: null,
+  }
 
   // global variables
   canPickupGun: boolean = true
@@ -147,13 +158,13 @@ export class MyGame extends Phaser.Scene {
       randomMission(this)
     })
 
-    const car = new Car(this, 1100, 500, "topdown-car", this.cursors)
-    this.carsGroup.add(car)
+    // const car = new Car(this, 1100, 500, "topdown-car", this.cursors)
+    // this.carsGroup.add(car)
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       new NPC(this, "npc") // you can pass different sprite keys like "npc2", "npcGuard", etc.
     }
-
+    ;``
     // Colliders
     handleCollisions(this, houses, this.cursors)
     this.drawPlayerHealthBar((this.PlayerParent as any).health)
@@ -177,6 +188,7 @@ export class MyGame extends Phaser.Scene {
       this.carsGroup.getChildren().forEach((car: any) => car.update())
 
     checkBulletAndOtherObjectsCollision(this)
+    detectWeaponCheatWeaponChange(this)
   }
 
   drawPlayerHealthBar(health: number) {
