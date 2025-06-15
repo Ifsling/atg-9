@@ -31,6 +31,7 @@ export interface CustomKeys {
   tilde: Phaser.Input.Keyboard.Key
   f: Phaser.Input.Keyboard.Key
   n: Phaser.Input.Keyboard.Key
+  shift: Phaser.Input.Keyboard.Key
 }
 
 export const MISSIONS = {

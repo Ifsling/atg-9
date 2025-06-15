@@ -4,7 +4,7 @@
   <export target="Map Tmx File.json" format="json"/>
  </editorsettings>
  <tileset firstgid="1" name="tileset" tilewidth="300" tileheight="300" tilecount="49" columns="7">
-  <image source="../tiled-software-datas/map-tileset/tileset.png" width="2100" height="2100"/>
+  <image source="tileset.png" width="2100" height="2100"/>
  </tileset>
  <layer id="1" name="Ground" width="34" height="28">
   <data encoding="csv">
