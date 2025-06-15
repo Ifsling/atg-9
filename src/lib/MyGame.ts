@@ -2,7 +2,7 @@ import EasyStar from "easystarjs"
 import { handleShooting } from "./bullet/Bullet"
 import { Car } from "./car/Car"
 import { handleCheatCodeSystem } from "./cheat-system/CheatSystem"
-import { CustomKeys, GunData, MISSIONS } from "./ConstantsAndTypes"
+import { CustomKeys, GunData } from "./ConstantsAndTypes"
 import { SetupEasyStar } from "./easystar/Easystar"
 import { EnemyNew } from "./enemy/EnemyNew"
 import { handleGunRotation, handleGunThrow } from "./gun/Gun"
@@ -15,10 +15,8 @@ import {
   handleUi,
   setupControls,
   setupParticleSystem,
-  showTopLeftOverlayText,
 } from "./HelperFunctions"
 import { createMap } from "./map/Map"
-import { MissionMarker } from "./mission/MissionMarker"
 import { NPC } from "./npc/Npc"
 import { cameraFollowPlayer } from "./player/Camera"
 import {
@@ -107,6 +105,9 @@ export class MyGame extends Phaser.Scene {
       "rocket-launcher-bullet",
       "/images/rocket-launcher-bullet.png"
     )
+    this.load.image("cop-car", "/images/cop.png")
+    this.load.image("npc-male", "/images/npc-male.png")
+    this.load.image("npc-female", "/images/npc-female.png")
   }
 
   create() {
@@ -130,7 +131,7 @@ export class MyGame extends Phaser.Scene {
 
     addingGunstoMap(this)
 
-    this.PlayerParent = setupPlayerParent(this, 1100, 300)
+    this.PlayerParent = setupPlayerParent(this, 700, 300)
 
     // Bullet pool
     createPlayerBullets(this)
@@ -144,26 +145,26 @@ export class MyGame extends Phaser.Scene {
     // Particle Systems
     setupParticleSystem(this)
 
-    new MissionMarker(this, 1100, 400, () => {
-      showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
+    // new MissionMarker(this, 1100, 400, () => {
+    //   showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
 
-      this.missionStarted = true
+    //   this.missionStarted = true
 
-      const missionKeys = Object.keys(MISSIONS) as Array<keyof typeof MISSIONS>
-      const randomIndex = Math.floor(Math.random() * missionKeys.length)
-      const randomMissionKey: keyof typeof MISSIONS = missionKeys[randomIndex]
-      const randomMission = MISSIONS[randomMissionKey]
+    //   const missionKeys = Object.keys(MISSIONS) as Array<keyof typeof MISSIONS>
+    //   const randomIndex = Math.floor(Math.random() * missionKeys.length)
+    //   const randomMissionKey: keyof typeof MISSIONS = missionKeys[randomIndex]
+    //   const randomMission = MISSIONS[randomMissionKey]
 
-      randomMission(this)
-    })
+    //   randomMission(this)
+    // })
 
     // const car = new Car(this, 1100, 500, "topdown-car", this.cursors)
     // this.carsGroup.add(car)
 
-    for (let i = 0; i < 2; i++) {
-      new NPC(this, "npc") // you can pass different sprite keys like "npc2", "npcGuard", etc.
+    for (let i = 0; i < 4; i++) {
+      new NPC(this, ["npc-male", "npc-female"]) // you can pass different sprite keys like "npc2", "npcGuard", etc.
     }
-    ;``
+
     // Colliders
     handleCollisions(this, houses, water, this.cursors)
     this.drawPlayerHealthBar((this.PlayerParent as any).health)

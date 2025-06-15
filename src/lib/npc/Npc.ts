@@ -11,13 +11,16 @@ export class NPC {
   speed: number = 50
   isMoving: boolean = false
 
-  constructor(scene: MyGame, spriteKey: string = "npc1") {
+  constructor(scene: MyGame, spritesArray: string[]) {
     this.scene = scene
 
     const spawnPoint = Phaser.Utils.Array.GetRandom(RandomLocationsForNpcs) as {
       x: number
       y: number
     }
+
+    const randNum = Math.floor(Math.random() * spritesArray.length)
+    const spriteKey = spritesArray[randNum]
 
     // Create NPC sprite
     this.sprite = scene.physics.add

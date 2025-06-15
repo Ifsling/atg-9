@@ -1,5 +1,5 @@
 // src/utils/gameHelpers.ts
-import Phaser from "phaser"
+import * as Phaser from "phaser"
 import { CustomKeys } from "./ConstantsAndTypes"
 import { MyGame } from "./MyGame"
 import { handleWeaponsCheatSystem } from "./cheat-system/CheatSystem"
@@ -28,6 +28,7 @@ export function setupControls(scene: Phaser.Scene): CustomKeys {
     tilde: Phaser.Input.Keyboard.KeyCodes.BACKTICK,
     f: Phaser.Input.Keyboard.KeyCodes.F,
     n: Phaser.Input.Keyboard.KeyCodes.N,
+    shift: Phaser.Input.Keyboard.KeyCodes.SHIFT,
   }) as CustomKeys
 }
 
@@ -148,10 +149,10 @@ export function handleUi(scene: MyGame) {
 }
 
 export function addingGunstoMap(scene: MyGame) {
-  const gun1 = SpawnPistol(scene, 1000, 500)
-  const gun2 = SpawnShotgun(scene, 1000, 900)
-  const gun3 = SpawnSMG(scene, 1200, 500)
-  const gun4 = SpawnRocketLauncher(scene, 1200, 900)
+  const gun1 = SpawnPistol(scene, 300, 200)
+  const gun2 = SpawnShotgun(scene, 500, 200)
+  const gun3 = SpawnSMG(scene, 730, 200)
+  const gun4 = SpawnRocketLauncher(scene, 1000, 200)
 
   scene.gunsGroup.addMultiple([gun1, gun2, gun3, gun4])
 }

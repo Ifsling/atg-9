@@ -1,4 +1,4 @@
-import Phaser from "phaser"
+import * as Phaser from "phaser"
 import { CustomKeys } from "../ConstantsAndTypes"
 import { showCenteredOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
@@ -93,6 +93,10 @@ export function handlePlayerMovement(
 
   if (isCheatConsoleOpen()) {
     return
+  }
+
+  if (cursors.shift.isDown) {
+    speed = 1000
   }
 
   const body = playerParent.body as Phaser.Physics.Arcade.Body

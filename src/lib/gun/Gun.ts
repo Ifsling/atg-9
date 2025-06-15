@@ -64,6 +64,8 @@ export function handleGunThrow(scene: MyGame, cursors: CustomKeys) {
     // Remove gun sprite from player
     scene.PlayerParent.remove(scene.currentGun.sprite)
 
+    scene.currentGun.sprite.destroy()
+
     // Clear current gun reference
     scene.currentGun = undefined
     scene.player.canShoot = false
