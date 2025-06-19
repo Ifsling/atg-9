@@ -32,7 +32,7 @@ export class EnemyNew {
     // Create bullets group
     this.enemyBullets = scene.physics.add.group({
       classType: Phaser.Physics.Arcade.Image,
-      maxSize: 20,
+      maxSize: 200,
       runChildUpdate: true,
     })
 

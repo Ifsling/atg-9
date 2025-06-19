@@ -3,6 +3,7 @@ import { handleShooting } from "./bullet/Bullet"
 import { Car } from "./car/Car"
 import { handleCheatCodeSystem } from "./cheat-system/CheatSystem"
 import { CustomKeys, GunData } from "./ConstantsAndTypes"
+import { Cop } from "./cops/Cop"
 import { SetupEasyStar } from "./easystar/Easystar"
 import { EnemyNew } from "./enemy/EnemyNew"
 import { handleGunRotation, handleGunThrow } from "./gun/Gun"
@@ -46,6 +47,7 @@ export class MyGame extends Phaser.Scene {
   isPlayerIncar: boolean = false
   carBeingDrivenByPlayer: Car | null = null
 
+  // Enemies Related
   enemies: EnemyNew[] = []
   enemy1!: EnemyNew
   enemyParent!: Phaser.GameObjects.Container
@@ -55,17 +57,24 @@ export class MyGame extends Phaser.Scene {
   enemyShootTimer!: Phaser.Time.TimerEvent
   enemyGun!: Phaser.GameObjects.Sprite
 
+  // Particle Systems
   bloodParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
   missionMarkerPickedParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
   explosionParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
 
+  // Missions Related
   missionStarted: boolean = false
   missionEnemies: EnemyNew[] = []
 
+  // Wanted Level Related
   wantedLevel: number = 0
+  wantedStars: Phaser.GameObjects.Image[] = []
+  cops: Cop[] = []
 
+  // NPC Related
   npcsGroup!: Phaser.Physics.Arcade.Group
 
+  // Cheat System related
   weaponCheatActivation: {
     status: boolean
     index: number
@@ -105,14 +114,20 @@ export class MyGame extends Phaser.Scene {
       "rocket-launcher-bullet",
       "/images/rocket-launcher-bullet.png"
     )
-    this.load.image("cop-car", "/images/cop.png")
+    this.load.image("cop", "/images/cop.png")
     this.load.image("npc-male", "/images/npc-male.png")
     this.load.image("npc-female", "/images/npc-female.png")
+    this.load.image("star", "/images/star.png")
   }
 
   create() {
     this.carsGroup = this.physics.add.group()
     this.npcsGroup = this.physics.add.group()
+    this.enemyBullets = this.physics.add.group({
+      classType: Phaser.Physics.Arcade.Image,
+      maxSize: 0,
+      runChildUpdate: true,
+    })
 
     const music = this.sound.add("bgMusic", {
       loop: true,
@@ -166,7 +181,8 @@ export class MyGame extends Phaser.Scene {
     }
 
     // Colliders
-    handleCollisions(this, houses, water, this.cursors)
+    handleCollisions(this, houses, water)
+
     this.drawPlayerHealthBar((this.PlayerParent as any).health)
   }
 

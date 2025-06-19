@@ -6,21 +6,19 @@ export function createMap(scene: Phaser.Scene) {
   )
   if (!tileset) throw new Error("Failed to load tileset")
 
-  const backgroundLayer = map
-    .createLayer("Ground", tileset, 0, 0)
-    ?.setScale(1.5)
+  const backgroundLayer = map.createLayer("Ground", tileset, 0, 0)
 
   const houses =
     map.getLayerIndex("Houses") !== null
-      ? map.createLayer("Houses", tileset, 0, 0)?.setScale(1.5)
+      ? map.createLayer("Houses", tileset, 0, 0)
       : null
   const roads =
     map.getLayerIndex("Road") !== null
-      ? map.createLayer("Road", tileset, 0, 0)?.setScale(1.5)
+      ? map.createLayer("Road", tileset, 0, 0)
       : null
   const water =
     map.getLayerIndex("Water") !== null
-      ? map.createLayer("Water", tileset, 0, 0)?.setScale(1.5)
+      ? map.createLayer("Water", tileset, 0, 0)
       : null
 
   houses?.setCollisionBetween(0, 43)

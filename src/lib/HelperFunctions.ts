@@ -36,8 +36,7 @@ export function setupControls(scene: Phaser.Scene): CustomKeys {
 export function handleCollisions(
   scene: MyGame,
   houses: Phaser.Tilemaps.TilemapLayer | null = null,
-  water: Phaser.Tilemaps.TilemapLayer | null = null,
-  cursors: CustomKeys
+  water: Phaser.Tilemaps.TilemapLayer | null = null
 ) {
   if (houses) {
     scene.physics.add.collider(scene.PlayerParent, houses)
@@ -82,6 +81,23 @@ export function handleCollisions(
     scene.physics.add.collider(scene.PlayerParent, enemy.enemySprite)
   })
 
+  // Add physical collision between player and Cops
+  scene.cops.forEach((cop) => {
+    scene.physics.add.overlap(
+      cop.enemyBullets,
+      scene.PlayerParent,
+      (player, bullet) => {
+        const enemyBullet = bullet as Phaser.Physics.Arcade.Image
+        enemyBullet.destroy()
+
+        // Damage the player
+        damagePlayer(scene, 10)
+      },
+      undefined,
+      scene
+    )
+  })
+
   // Enemy bullet hits player
   scene.enemies.forEach((enemy) => {
     scene.physics.add.overlap(
@@ -121,23 +137,28 @@ export function handleCollisions(
 export function handleUi(scene: MyGame) {
   const healthBarWidth = 200
   const healthBarHeight = 20
-  const x = scene.scale.width - healthBarWidth - 10
-  const y = 10
+  const margin = 10
+  const x = scene.scale.width - healthBarWidth - margin
+  const y = margin
 
-  // Background (gray)
+  // Health Bar Background (gray)
   scene.playerHealthBackground = scene.add.graphics()
-  scene.playerHealthBackground.fillStyle(0x444444)
-  scene.playerHealthBackground.fillRect(x, y, healthBarWidth, healthBarHeight)
-  scene.playerHealthBackground.setScrollFactor(0).setDepth(1000)
+  scene.playerHealthBackground
+    .fillStyle(0x444444)
+    .fillRect(x, y, healthBarWidth, healthBarHeight)
+    .setScrollFactor(0)
+    .setDepth(1000)
 
-  // Foreground (red)
+  // Health Bar Foreground (red)
   scene.playerHealthBar = scene.add.graphics()
-  scene.playerHealthBar.setScrollFactor(0).setDepth(1001) // <- Important!
-  scene.drawPlayerHealthBar(100) // <- Use the new method, initial full health
+  scene.playerHealthBar.setScrollFactor(0).setDepth(1001)
 
-  // Bullet count
+  // Draw initial health
+  scene.drawPlayerHealthBar(100)
+
+  // Bullet Count Text
   scene.bulletText = scene.add
-    .text(10, 10, `Bullets: ${scene.maxBullets}`, {
+    .text(margin, y, `Bullets: ${scene.maxBullets}`, {
       fontSize: "18px",
       color: "#ffffff",
       fontFamily: "monospace",
@@ -145,7 +166,40 @@ export function handleUi(scene: MyGame) {
       padding: { x: 6, y: 4 },
     })
     .setScrollFactor(0)
-    .setDepth(1000)
+    .setDepth(1002)
+
+  // Wanted Level Stars (UI layer)
+  displayWantedLevelStars(scene)
+}
+
+export function displayWantedLevelStars(scene: MyGame) {
+  // Wanted level (stars)
+  const starSpacing = 32 // space between stars
+  const starSize = 24
+  const centerX = scene.scale.width / 2
+  const topY = 10
+
+  // Remove previous stars if any
+  if (scene.wantedStars) {
+    scene.wantedStars.forEach((star) => star.destroy())
+  }
+
+  scene.wantedStars = []
+
+  if (scene.wantedLevel > 0) {
+    const totalWidth = (scene.wantedLevel - 1) * starSpacing
+    const startX = centerX - totalWidth / 2
+
+    for (let i = 0; i < scene.wantedLevel; i++) {
+      const star = scene.add
+        .image(startX + i * starSpacing, topY + starSize / 2, "star")
+        .setScrollFactor(0)
+        .setDepth(1000)
+        .setDisplaySize(starSize, starSize)
+
+      scene.wantedStars.push(star)
+    }
+  }
 }
 
 export function addingGunstoMap(scene: MyGame) {
@@ -253,6 +307,7 @@ export function checkBulletAndOtherObjectsCollision(scene: MyGame) {
         targetSprite.getBounds()
       )
     ) {
+      console.log("HITTT")
       const textureKey = bullet.texture?.key
 
       if (textureKey === "rocket-launcher-bullet") {
@@ -279,6 +334,11 @@ export function checkBulletAndOtherObjectsCollision(scene: MyGame) {
       checkCollision(bullet, enemy.enemySprite, () =>
         enemy.takeDamage(damageAmount)
       )
+    })
+
+    // Cops
+    scene.cops.forEach((cop) => {
+      checkCollision(bullet, cop.sprite, () => cop.takeDamage(damageAmount))
     })
 
     // NPCs
