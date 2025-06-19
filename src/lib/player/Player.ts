@@ -69,7 +69,9 @@ export function setupPlayerParent(scene: MyGame, x: number, y: number) {
     -scene.player.displayWidth / 2,
     -scene.player.displayHeight / 2
   )
-  ;(scene.PlayerParent as any).health = 30
+
+  // Player HEALTH
+  ;(scene.PlayerParent as any).health = 100
 
   return scene.PlayerParent
 }

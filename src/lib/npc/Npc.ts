@@ -1,4 +1,6 @@
-import { RandomLocationsForNpcs } from "../ConstantsAndTypes"
+import { SpawnableLocations } from "../ConstantsAndTypes"
+import { createCop } from "../cops/Cop"
+import { displayWantedLevelStars } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 
 export class NPC {
@@ -14,7 +16,7 @@ export class NPC {
   constructor(scene: MyGame, spritesArray: string[]) {
     this.scene = scene
 
-    const spawnPoint = Phaser.Utils.Array.GetRandom(RandomLocationsForNpcs) as {
+    const spawnPoint = Phaser.Utils.Array.GetRandom(SpawnableLocations) as {
       x: number
       y: number
     }
@@ -106,7 +108,7 @@ export class NPC {
   }
 
   pickNewTarget() {
-    let newTarget = Phaser.Utils.Array.GetRandom(RandomLocationsForNpcs)
+    let newTarget = Phaser.Utils.Array.GetRandom(SpawnableLocations)
 
     // Avoid going to the same spot
     while (
@@ -114,7 +116,7 @@ export class NPC {
       newTarget.x === this.targetLocation.x &&
       newTarget.y === this.targetLocation.y
     ) {
-      newTarget = Phaser.Utils.Array.GetRandom(RandomLocationsForNpcs)
+      newTarget = Phaser.Utils.Array.GetRandom(SpawnableLocations)
     }
 
     this.targetLocation = newTarget
@@ -140,6 +142,10 @@ export class NPC {
 
     const deathAudio = new Audio("/audio/explosion.wav")
     deathAudio.play()
+
+    this.scene.wantedLevel = Math.min(this.scene.wantedLevel + 1, 5)
+    displayWantedLevelStars(this.scene)
+    createCop(this.scene)
 
     this.sprite.destroy()
     this.healthBar.destroy()

@@ -168,7 +168,7 @@
         {
          "columns":7,
          "firstgid":1,
-         "image":"..\/tiled-software-datas\/map-tileset\/tileset.png",
+         "image":"tileset.png",
          "imageheight":2100,
          "imagewidth":2100,
          "margin":0,

@@ -39,7 +39,7 @@ export const MISSIONS = {
   RUN_FROM_SQUAD: MissionTwo_KillSquad,
 }
 
-export const RandomLocationsForNpcs = [
+export const SpawnableLocations = [
   { x: 1100, y: 100 },
   { x: 1100, y: 500 },
   { x: 100, y: 1100 },
