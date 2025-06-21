@@ -3,17 +3,17 @@ import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 import { damagePlayer } from "../player/Player"
 
-export function MissionTwo_KillSquad(scene: MyGame) {
-  scene.missionStarted = true
+export function Mission_EnemyChasingYou(scene: MyGame) {
+  scene.randomMissionStarted = true
 
   const missionStartTime = scene.time.now
   localStorage.setItem("missionStartTime", missionStartTime.toString())
 
   // do something after 2 minutes
   scene.time.addEvent({
-    delay: 4000,
+    delay: 1000 * 60 * 2, // 2 minutes
     callback: () => {
-      scene.missionStarted = false
+      scene.randomMissionStarted = false
 
       showTopLeftOverlayText(scene, "Mission Completed", 10, 70, 3000)
 

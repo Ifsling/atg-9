@@ -1,7 +1,11 @@
-import { SpawnableLocations } from "../ConstantsAndTypes"
+import { SpawnableLocationsInGridCount } from "../ConstantsAndTypes"
 import { createCop } from "../cops/Cop"
 import { displayWantedLevelStars } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
+import {
+  getRandomSpawnLocationWithinRadius,
+  gridToWorldCoordinates,
+} from "../utils"
 
 export class NPC {
   scene: MyGame
@@ -13,13 +17,20 @@ export class NPC {
   speed: number = 50
   isMoving: boolean = false
 
-  constructor(scene: MyGame, spritesArray: string[]) {
+  constructor(
+    scene: MyGame,
+    spritesArray: string[],
+    spawnAt?: { x: number; y: number }
+  ) {
     this.scene = scene
 
-    const spawnPoint = Phaser.Utils.Array.GetRandom(SpawnableLocations) as {
-      x: number
-      y: number
-    }
+    const spawnPoint =
+      spawnAt ??
+      getRandomSpawnLocationWithinRadius(
+        scene.playerParentBody.x,
+        scene.playerParentBody.y,
+        scene.NPC_SPAWN_RADIUS
+      )
 
     const randNum = Math.floor(Math.random() * spritesArray.length)
     const spriteKey = spritesArray[randNum]
@@ -108,18 +119,28 @@ export class NPC {
   }
 
   pickNewTarget() {
-    let newTarget = Phaser.Utils.Array.GetRandom(SpawnableLocations)
+    let newTargetGrid = Phaser.Utils.Array.GetRandom(
+      SpawnableLocationsInGridCount
+    )
 
     // Avoid going to the same spot
     while (
       this.targetLocation &&
-      newTarget.x === this.targetLocation.x &&
-      newTarget.y === this.targetLocation.y
+      newTargetGrid.x === this.targetLocation.x &&
+      newTargetGrid.y === this.targetLocation.y
     ) {
-      newTarget = Phaser.Utils.Array.GetRandom(SpawnableLocations)
+      newTargetGrid = Phaser.Utils.Array.GetRandom(
+        SpawnableLocationsInGridCount
+      )
     }
 
-    this.targetLocation = newTarget
+    // Convert to world coordinates
+    const newTargetWorld = gridToWorldCoordinates(
+      newTargetGrid.x,
+      newTargetGrid.y
+    )
+
+    this.targetLocation = newTargetWorld
   }
 
   takeDamage(amount: number) {
@@ -133,20 +154,25 @@ export class NPC {
     }
   }
 
-  destroy() {
+  destroy(isKilledByPlayer: boolean = true) {
     this.scene.bloodParticleSystem.explode(
       40,
       (this.sprite.x || 0) - 100,
       (this.sprite.y || 0) - 100
     )
 
-    const deathAudio = new Audio("/audio/explosion.wav")
-    deathAudio.play()
+    if (isKilledByPlayer) {
+      const deathAudio = new Audio("/audio/explosion.wav")
+      deathAudio.play()
+    }
 
-    this.scene.wantedLevel = Math.min(this.scene.wantedLevel + 1, 5)
-    displayWantedLevelStars(this.scene)
-    createCop(this.scene)
+    if (isKilledByPlayer) {
+      this.scene.wantedLevel = Math.min(this.scene.wantedLevel + 1, 5)
+      displayWantedLevelStars(this.scene)
+      createCop(this.scene)
+    }
 
+    this.scene.npcsGroup.remove(this.sprite, true, true)
     this.sprite.destroy()
     this.healthBar.destroy()
   }
@@ -240,5 +266,47 @@ export class NPC {
     }
 
     moveToNextTile()
+  }
+}
+
+export function spawnNpcNearPlayer(scene: MyGame) {
+  const playerX = scene.playerParentBody.x
+  const playerY = scene.playerParentBody.y
+
+  const location = getRandomSpawnLocationWithinRadius(
+    playerX,
+    playerY,
+    scene.NPC_SPAWN_RADIUS
+  )
+
+  new NPC(scene, ["npc-male", "npc-female"], location)
+}
+
+export function manageNPCsCount(scene: MyGame) {
+  // Maintain NPC count near player
+  const playerX = scene.playerParentBody.x
+  const playerY = scene.playerParentBody.y
+
+  // Remove NPCs too far away
+  scene.npcsGroup.getChildren().forEach((npcSprite: any) => {
+    const npc = npcSprite.getData("ref") as NPC
+    const dist = Phaser.Math.Distance.Between(
+      npc.sprite.x,
+      npc.sprite.y,
+      playerX,
+      playerY
+    )
+
+    if (dist > scene.NPC_REMOVAL_DISTANCE) {
+      npc.destroy(false)
+    }
+  })
+
+  // Check and maintain NPC count
+  const currentNpcCount = scene.npcsGroup.getChildren().length
+  const npcsToSpawn = scene.MAX_NPC_COUNT - currentNpcCount
+
+  for (let i = 0; i < npcsToSpawn; i++) {
+    spawnNpcNearPlayer(scene)
   }
 }

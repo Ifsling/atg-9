@@ -10,13 +10,13 @@ export const StartedMissionsLocations = [
   { x: 1100, y: 1100 },
 ]
 
-export function MissionOne_KillSquad(scene: MyGame) {
+export function Mission_SquadWipe(scene: MyGame) {
   const randSpawnPoint =
     StartedMissionsLocations[
       Math.floor(Math.random() * StartedMissionsLocations.length)
     ]
 
-  scene.missionStarted = true
+  scene.randomMissionStarted = true
 
   const enemy1 = new EnemyNew(scene, randSpawnPoint.x, randSpawnPoint.y)
   const enemy2 = new EnemyNew(scene, randSpawnPoint.x + 250, randSpawnPoint.y)
