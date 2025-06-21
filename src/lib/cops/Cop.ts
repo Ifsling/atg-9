@@ -2,6 +2,7 @@ import * as Phaser from "phaser"
 import { displayWantedLevelStars } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 import { damagePlayer } from "../player/Player"
+import { getRandomSpawnLocationWithinRadius } from "../utils"
 
 export class Cop {
   scene: MyGame
@@ -162,8 +163,11 @@ export function createCop(scene: MyGame) {
   noOfCops -= existingCopsLength
 
   while (noOfCops > 0) {
-    const x = Phaser.Math.Between(100, 900)
-    const y = Phaser.Math.Between(100, 900)
+    const { x, y } = getRandomSpawnLocationWithinRadius(
+      scene.playerParentBody.x,
+      scene.playerParentBody.y,
+      1000
+    )
 
     scene.cops.forEach((element) => {
       if (element.sprite.x === x && element.sprite.y === y) {

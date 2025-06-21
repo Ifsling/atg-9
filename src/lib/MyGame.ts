@@ -19,15 +19,16 @@ import {
   showTopLeftOverlayText,
 } from "./HelperFunctions"
 import { createMap } from "./map/Map"
-import { MissionEndMarker } from "./mission/MissionEndMarker"
 import { MissionMarker } from "./mission/MissionMarker"
 import { manageNPCsCount } from "./npc/Npc"
 import { cameraFollowPlayer } from "./player/Camera"
 import {
+  drawPlayerHealthBar,
   handlePlayerMovement,
   PlayerCharacter,
   setupPlayerParent,
 } from "./player/Player"
+import { preloadAssets } from "./PreloadAssets"
 
 export class MyGame extends Phaser.Scene {
   easystar!: EasyStar.js
@@ -107,30 +108,7 @@ export class MyGame extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("tileset", "/map-elements/tileset.png")
-    this.load.tilemapTiledJSON("map", "/map-elements/tiled-tilemap-json.json")
-    this.load.image("player", "/images/player.png")
-    this.load.image("pistol", "/images/pistol.png")
-    this.load.image("player-with-gun", "/images/player-with-gun.png")
-    this.load.image("bullet", "/images/bullet.png")
-    this.load.image("blood-drop", "/images/blood-drop.png")
-    this.load.image("diamond-shape", "/images/diamond-shape.png")
-    this.load.image("topdown-car", "/images/topdown-car.png")
-    this.load.image("white-circle", "/images/white-circle.png")
-    this.load.image("npc", "/images/npc.png")
-    this.load.audio("bgMusic", "/audio/bg-music.mp3")
-    this.load.image("shotgun", "/images/shotgun.png")
-    this.load.image("sniper", "/images/sniper.png")
-    this.load.image("smg", "/images/smg.png")
-    this.load.image("rocket-launcher", "/images/rocket-launcher.png")
-    this.load.image(
-      "rocket-launcher-bullet",
-      "/images/rocket-launcher-bullet.png"
-    )
-    this.load.image("cop", "/images/cop.png")
-    this.load.image("npc-male", "/images/npc-male.png")
-    this.load.image("npc-female", "/images/npc-female.png")
-    this.load.image("star", "/images/star.png")
+    preloadAssets(this)
   }
 
   create() {
@@ -193,21 +171,10 @@ export class MyGame extends Phaser.Scene {
       console.log(this.storylineMission)
     })
 
-    const missionEnd = new MissionEndMarker(this, 500, 300, () => {
-      // Callback runs when player touches the marker
-      console.log("Mission Complete!")
-
-      // Do something like:
-      showTopLeftOverlayText(this, "Mission Completed", 20, 70, 3000)
-    })
-
-    // const car = new Car(this, 1100, 500, "topdown-car", this.cursors)
-    // this.carsGroup.add(car)
-
     // Colliders
     handleCollisions(this, houses, water)
 
-    this.drawPlayerHealthBar((this.PlayerParent as any).health)
+    drawPlayerHealthBar(this, (this.PlayerParent as any).health)
   }
 
   // Modified MyGame update function with debug visualization
@@ -231,20 +198,5 @@ export class MyGame extends Phaser.Scene {
 
     checkBulletAndOtherObjectsCollision(this)
     detectWeaponCheatWeaponChange(this)
-  }
-
-  drawPlayerHealthBar(health: number) {
-    const maxHealth = 100
-    const currentHealth = Phaser.Math.Clamp(health, 0, maxHealth)
-    const percent = currentHealth / maxHealth
-
-    const barWidth = 200
-    const barHeight = 20
-    const x = this.scale.width - barWidth - 10
-    const y = 10
-
-    this.playerHealthBar.clear()
-    this.playerHealthBar.fillStyle(0xff0000)
-    this.playerHealthBar.fillRect(x, y, barWidth * percent, barHeight)
   }
 }

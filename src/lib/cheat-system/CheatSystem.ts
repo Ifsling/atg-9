@@ -12,6 +12,7 @@ import {
   showTopLeftOverlayText,
 } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
+import { drawPlayerHealthBar } from "../player/Player"
 
 let consoleOpen = false
 let inputElement: Phaser.GameObjects.DOMElement | null = null
@@ -191,7 +192,7 @@ function processCheatCode(scene: MyGame, code: string) {
   switch (code.toLowerCase()) {
     case "atglifemod":
       ;(scene.PlayerParent as any).health = 100
-      scene.drawPlayerHealthBar(100)
+      drawPlayerHealthBar(scene, 100)
       showTopLeftOverlayText(
         scene,
         "Cheat activated: Full Health",
@@ -203,7 +204,7 @@ function processCheatCode(scene: MyGame, code: string) {
 
     case "atggodmode":
       ;(scene.PlayerParent as any).health = 1000
-      scene.drawPlayerHealthBar(1000)
+      drawPlayerHealthBar(scene, 1000)
       showTopLeftOverlayText(scene, "Cheat activated: God Mode", 10, 70, 5000)
       break
 

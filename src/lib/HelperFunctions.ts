@@ -12,7 +12,7 @@ import {
 } from "./gun/GenerateGuns"
 import { handleGunPickup } from "./gun/Gun"
 import { NPC } from "./npc/Npc"
-import { damagePlayer } from "./player/Player"
+import { damagePlayer, drawPlayerHealthBar } from "./player/Player"
 
 export function setupControls(scene: Phaser.Scene): CustomKeys {
   return scene.input.keyboard!.addKeys({
@@ -154,7 +154,7 @@ export function handleUi(scene: MyGame) {
   scene.playerHealthBar.setScrollFactor(0).setDepth(1001)
 
   // Draw initial health
-  scene.drawPlayerHealthBar(100)
+  drawPlayerHealthBar(scene, 100)
 
   // Bullet Count Text
   scene.bulletText = scene.add
