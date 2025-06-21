@@ -2,7 +2,7 @@ import EasyStar from "easystarjs"
 import { handleShooting } from "./bullet/Bullet"
 import { Car } from "./car/Car"
 import { handleCheatCodeSystem } from "./cheat-system/CheatSystem"
-import { CustomKeys, GunData } from "./ConstantsAndTypes"
+import { CustomKeys, GunData, STORYLINE_MISSIONS } from "./ConstantsAndTypes"
 import { Cop } from "./cops/Cop"
 import { SetupEasyStar } from "./easystar/Easystar"
 import { EnemyNew } from "./enemy/EnemyNew"
@@ -16,9 +16,12 @@ import {
   handleUi,
   setupControls,
   setupParticleSystem,
+  showTopLeftOverlayText,
 } from "./HelperFunctions"
 import { createMap } from "./map/Map"
-import { NPC } from "./npc/Npc"
+import { MissionEndMarker } from "./mission/MissionEndMarker"
+import { MissionMarker } from "./mission/MissionMarker"
+import { manageNPCsCount } from "./npc/Npc"
 import { cameraFollowPlayer } from "./player/Camera"
 import {
   handlePlayerMovement,
@@ -63,8 +66,15 @@ export class MyGame extends Phaser.Scene {
   explosionParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
 
   // Missions Related
-  missionStarted: boolean = false
+  randomMissionStarted: boolean = false
   missionEnemies: EnemyNew[] = []
+  storylineMission: {
+    started: boolean
+    currentMission: ((scene: MyGame) => void) | string
+  } = {
+    started: false,
+    currentMission: STORYLINE_MISSIONS.MISSION_ZERO,
+  }
 
   // Wanted Level Related
   wantedLevel: number = 0
@@ -73,6 +83,9 @@ export class MyGame extends Phaser.Scene {
 
   // NPC Related
   npcsGroup!: Phaser.Physics.Arcade.Group
+  readonly MAX_NPC_COUNT = 6
+  readonly NPC_SPAWN_RADIUS = 1500
+  readonly NPC_REMOVAL_DISTANCE = 2000
 
   // Cheat System related
   weaponCheatActivation: {
@@ -160,25 +173,36 @@ export class MyGame extends Phaser.Scene {
     // Particle Systems
     setupParticleSystem(this)
 
-    // new MissionMarker(this, 1100, 400, () => {
-    //   showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
+    new MissionMarker(this, 2000, 3390, () => {
+      showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
 
-    //   this.missionStarted = true
+      this.storylineMission.started = true
+      switch (this.storylineMission.currentMission) {
+        case STORYLINE_MISSIONS.MISSION_ZERO:
+          this.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_ONE
+          break
+        case STORYLINE_MISSIONS.MISSION_ONE:
+          this.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_TWO
+          break
+      }
 
-    //   const missionKeys = Object.keys(MISSIONS) as Array<keyof typeof MISSIONS>
-    //   const randomIndex = Math.floor(Math.random() * missionKeys.length)
-    //   const randomMissionKey: keyof typeof MISSIONS = missionKeys[randomIndex]
-    //   const randomMission = MISSIONS[randomMissionKey]
+      if (typeof this.storylineMission.currentMission === "function") {
+        this.storylineMission.currentMission(this)
+      }
 
-    //   randomMission(this)
-    // })
+      console.log(this.storylineMission)
+    })
+
+    const missionEnd = new MissionEndMarker(this, 500, 300, () => {
+      // Callback runs when player touches the marker
+      console.log("Mission Complete!")
+
+      // Do something like:
+      showTopLeftOverlayText(this, "Mission Completed", 20, 70, 3000)
+    })
 
     // const car = new Car(this, 1100, 500, "topdown-car", this.cursors)
     // this.carsGroup.add(car)
-
-    for (let i = 0; i < 4; i++) {
-      new NPC(this, ["npc-male", "npc-female"]) // you can pass different sprite keys like "npc2", "npcGuard", etc.
-    }
 
     // Colliders
     handleCollisions(this, houses, water)
@@ -189,6 +213,8 @@ export class MyGame extends Phaser.Scene {
   // Modified MyGame update function with debug visualization
   update() {
     handleCheatCodeSystem(this, this.cursors)
+
+    manageNPCsCount(this)
 
     this.bulletText.setText(`Bullets: ${this.currentGun?.ammo || 0}`)
     handlePlayerMovement(this.PlayerParent, this.cursors)

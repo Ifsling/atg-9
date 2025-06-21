@@ -183,7 +183,10 @@ export class EnemyNew {
     }
 
     // Check if all mission enemies are dead
-    if (this.scene.missionStarted && this.scene.missionEnemies.length === 0) {
+    if (
+      this.scene.randomMissionStarted &&
+      this.scene.missionEnemies.length === 0
+    ) {
       showTopLeftOverlayText(this.scene, "Mission Completed", 20, 70, 3000)
     }
   }
