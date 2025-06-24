@@ -1,5 +1,10 @@
 import { MyGame } from "../MyGame"
 
+export type ACCEPTANCE_ENTITIES =
+  | "only_car"
+  | "both_car_and_player"
+  | "only_player"
+
 export class MissionEndMarker {
   scene: MyGame
   container: Phaser.GameObjects.Container
@@ -7,7 +12,13 @@ export class MissionEndMarker {
   radius: number = 40
   callback: () => void
 
-  constructor(scene: MyGame, x: number, y: number, callback: () => void) {
+  constructor(
+    scene: MyGame,
+    x: number,
+    y: number,
+    callback: () => void,
+    acceptanceEntities: ACCEPTANCE_ENTITIES = "both_car_and_player"
+  ) {
     this.scene = scene
     this.callback = callback
 
@@ -27,8 +38,13 @@ export class MissionEndMarker {
     // Enable physics
     scene.physics.add.existing(this.container)
     const body = this.container.body as Phaser.Physics.Arcade.Body
-    body.setCircle(this.radius + 15)
-    body.setOffset(27, 27)
+    const circleRadius = this.radius + 15
+    body.setCircle(
+      circleRadius,
+      this.container.width / 2 - circleRadius,
+      this.container.height / 2 - circleRadius
+    )
+
     body.setImmovable(true)
 
     // Animate ring size (pulsating effect)
@@ -40,14 +56,41 @@ export class MissionEndMarker {
       repeat: -1,
     })
 
-    // Enable overlap detection
-    scene.physics.add.overlap(
-      scene.PlayerParent,
-      this.container,
-      this.handleOverlap,
-      undefined,
-      this
-    )
+    if (acceptanceEntities === "only_player") {
+      // Enable overlap detection
+      scene.physics.add.overlap(
+        scene.PlayerParent,
+        this.container,
+        this.handleOverlap,
+        undefined,
+        this
+      )
+    } else if (acceptanceEntities === "only_car") {
+      // Enable overlap detection with player car
+      scene.physics.add.overlap(
+        scene.carsGroup,
+        this.container,
+        this.handleOverlap,
+        undefined,
+        this
+      )
+    } else {
+      // Enable overlap detection with both player and car
+      scene.physics.add.overlap(
+        scene.PlayerParent,
+        this.container,
+        this.handleOverlap,
+        undefined,
+        this
+      )
+      scene.physics.add.overlap(
+        scene.carsGroup,
+        this.container,
+        this.handleOverlap,
+        undefined,
+        this
+      )
+    }
   }
 
   createPulsatingRing(
@@ -73,12 +116,6 @@ export class MissionEndMarker {
   }
 
   handleOverlap() {
-    // this.scene.missionCompleteParticleSystem?.explode(
-    //   1,
-    //   this.container.x - 100,
-    //   this.container.y - 100
-    // )
-
     this.callback()
     this.destroy()
   }

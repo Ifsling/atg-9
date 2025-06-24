@@ -31,6 +31,14 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
     this.scene.add.existing(this)
     this.scene.physics.add.existing(this)
 
+    const width = this.width * this.scaleX
+    const height = this.height * this.scaleY
+    const squareSize = Math.min(width, height)
+
+    const body = this.body as Phaser.Physics.Arcade.Body
+    body.setSize(squareSize, squareSize)
+    body.setOffset((width - squareSize) / 2, (height - squareSize) / 2)
+
     this.setScale(0.5)
     this.setDrag(100)
     this.setAngularDrag(100)
@@ -47,13 +55,14 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
     this.carHealthBar = this.scene.add.graphics()
     this.hideHealthBar()
 
+    scene.carsGroup.add(this)
+
     scene.enemies.forEach((enemy) => {
       // 🚗 Add collision between enemy bullets and cars
       scene.physics.add.overlap(
         enemy.enemyBullets,
         this,
         (car, enemyBullet) => {
-          const bullet = enemyBullet as Phaser.Physics.Arcade.Image
           enemyBullet.destroy()
           this.takeDamage(10)
         },
@@ -61,6 +70,8 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
         scene
       )
     })
+
+    this.setCollideWorldBounds(true)
   }
 
   update() {
@@ -122,6 +133,9 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
     } else {
       this.setAngularVelocity(0)
     }
+
+    this.scene.playerParentBody.x = this.x
+    this.scene.playerParentBody.y = this.y
   }
 
   enter() {

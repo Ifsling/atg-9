@@ -1,5 +1,5 @@
-import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
+import { completeMission } from "./EnemyKillingMissionsCompletion"
 
 export class EnemyNew {
   scene: MyGame
@@ -11,12 +11,14 @@ export class EnemyNew {
   healthBar!: Phaser.GameObjects.Graphics
   shootTimer!: Phaser.Time.TimerEvent
   shouldFollowPlayer: boolean = false
+  isChoosenMissionEnemy: boolean = false
 
   constructor(
     scene: MyGame,
     x: number = 1100,
     y: number = 300,
-    shouldFollowPlayer: boolean = false
+    shouldFollowPlayer: boolean = false,
+    shootPlayer: boolean = true
   ) {
     this.scene = scene
     this.shouldFollowPlayer = shouldFollowPlayer
@@ -41,12 +43,14 @@ export class EnemyNew {
     this.drawHealthBar()
 
     // Setup shooting timer
-    this.shootTimer = scene.time.addEvent({
-      delay: 1000,
-      loop: true,
-      callback: this.shootAtPlayer,
-      callbackScope: this,
-    })
+    if (shootPlayer) {
+      this.shootTimer = scene.time.addEvent({
+        delay: 1000,
+        loop: true,
+        callback: this.shootAtPlayer,
+        callbackScope: this,
+      })
+    }
 
     if (shouldFollowPlayer) {
       scene.time.addEvent({
@@ -163,7 +167,7 @@ export class EnemyNew {
       this.enemySprite.body?.y
     )
 
-    this.shootTimer.remove()
+    this.shootTimer?.remove()
 
     this.enemyBullets.clear(true, true)
     this.enemyGun.destroy()
@@ -182,12 +186,9 @@ export class EnemyNew {
       this.scene.missionEnemies.splice(missionIndex, 1)
     }
 
-    // Check if all mission enemies are dead
-    if (
-      this.scene.randomMissionStarted &&
-      this.scene.missionEnemies.length === 0
-    ) {
-      showTopLeftOverlayText(this.scene, "Mission Completed", 20, 70, 3000)
+    // Check if storyline mission is completed
+    if (this.scene.storylineMission.started) {
+      completeMission(this.scene, this.isChoosenMissionEnemy)
     }
   }
 

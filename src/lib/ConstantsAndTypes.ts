@@ -1,5 +1,8 @@
-import { Mission_SquadWipe } from "./mission/MissionOne"
-import { Mission_EnemyChasingYou } from "./mission/MissionTwo"
+import { Mission_BringBackAnesthetics } from "./mission/Mission_BringBackAnesthetics"
+import { Mission_EnemyChasingYou } from "./mission/Mission_EnemyChasingYou"
+import { Mission_KillTheMedHider } from "./mission/Mission_KillTheMedHider"
+import { Mission_PickUpFather } from "./mission/Mission_PickUpFather"
+import { Mission_SquadWipe } from "./mission/Mission_SquadWipe"
 
 export const TILE_SIZE = 300
 
@@ -421,7 +424,28 @@ export const SpawnableLocationsInGridCount = [
 ]
 
 export const STORYLINE_MISSIONS = {
-  MISSION_ZERO: "MISSION_ZERO",
-  MISSION_ONE: Mission_EnemyChasingYou, // MISSION MARKER IN 12,7
-  MISSION_TWO: Mission_SquadWipe,
+  MISSION_ONE: {
+    missionFunction: Mission_EnemyChasingYou,
+    missionMarkerPosition: { x: 2000, y: 3390 },
+  },
+  MISSION_TWO: {
+    missionFunction: Mission_SquadWipe,
+    missionMarkerPosition: { x: 2550, y: 7050 },
+  },
+  MISSION_THREE: {
+    missionFunction: Mission_PickUpFather,
+    missionMarkerPosition: { x: 8250, y: 3750 },
+  },
+  MISSION_FOUR: {
+    missionFunction: Mission_BringBackAnesthetics,
+    missionMarkerPosition: { x: 9150, y: 5250 },
+  },
+  MISSION_FIVE: {
+    missionFunction: Mission_KillTheMedHider,
+    missionMarkerPosition: { x: 9150, y: 5250 },
+  },
+  MISSION_SIX: {
+    missionFunction: () => {},
+    missionMarkerPosition: { x: 8550, y: 2250 },
+  },
 }

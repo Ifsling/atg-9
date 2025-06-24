@@ -67,14 +67,16 @@ export class MyGame extends Phaser.Scene {
   explosionParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
 
   // Missions Related
-  randomMissionStarted: boolean = false
   missionEnemies: EnemyNew[] = []
   storylineMission: {
     started: boolean
-    currentMission: ((scene: MyGame) => void) | string
+    currentMission: {
+      missionFunction: (scene: MyGame) => void
+      missionMarkerPosition: { x: number; y: number }
+    }
   } = {
     started: false,
-    currentMission: STORYLINE_MISSIONS.MISSION_ZERO,
+    currentMission: STORYLINE_MISSIONS.MISSION_FIVE,
   }
 
   // Wanted Level Related
@@ -137,7 +139,7 @@ export class MyGame extends Phaser.Scene {
 
     addingGunstoMap(this)
 
-    this.PlayerParent = setupPlayerParent(this, 700, 300)
+    this.PlayerParent = setupPlayerParent(this, 8500, 5500)
 
     // Bullet pool
     createPlayerBullets(this)
@@ -148,28 +150,24 @@ export class MyGame extends Phaser.Scene {
     // UI
     handleUi(this)
 
+    const car = new Car(this, 8500, 5500, "topdown-car", this.cursors)
+
     // Particle Systems
     setupParticleSystem(this)
 
-    new MissionMarker(this, 2000, 3390, () => {
-      showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
+    new MissionMarker(
+      this,
+      this.storylineMission.currentMission.missionMarkerPosition.x,
+      this.storylineMission.currentMission.missionMarkerPosition.y,
+      () => {
+        showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
 
-      this.storylineMission.started = true
-      switch (this.storylineMission.currentMission) {
-        case STORYLINE_MISSIONS.MISSION_ZERO:
-          this.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_ONE
-          break
-        case STORYLINE_MISSIONS.MISSION_ONE:
-          this.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_TWO
-          break
+        this.missionEnemies = []
+        this.storylineMission.started = true
+
+        this.storylineMission.currentMission.missionFunction(this)
       }
-
-      if (typeof this.storylineMission.currentMission === "function") {
-        this.storylineMission.currentMission(this)
-      }
-
-      console.log(this.storylineMission)
-    })
+    )
 
     // Colliders
     handleCollisions(this, houses, water)

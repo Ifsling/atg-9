@@ -205,7 +205,7 @@ export function displayWantedLevelStars(scene: MyGame) {
 export function addingGunstoMap(scene: MyGame) {
   const gun1 = SpawnPistol(scene, 300, 200)
   const gun2 = SpawnShotgun(scene, 500, 200)
-  const gun3 = SpawnSMG(scene, 730, 200)
+  const gun3 = SpawnSMG(scene, 8800, 5500)
   const gun4 = SpawnRocketLauncher(scene, 1000, 200)
 
   scene.gunsGroup.addMultiple([gun1, gun2, gun3, gun4])
@@ -418,8 +418,8 @@ export function showCenteredOverlayText(
 export function showTopLeftOverlayText(
   scene: Phaser.Scene,
   message: string,
-  x: number = 10,
-  y: number = 10,
+  x: number = 20,
+  y: number = 70,
   destroyAfter: number = -1,
   textColor: number = 0xffffff,
   bgColor: number = 0x000000,
