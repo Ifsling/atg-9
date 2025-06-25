@@ -2,7 +2,8 @@ import EasyStar from "easystarjs"
 import { handleShooting } from "./bullet/Bullet"
 import { Car } from "./car/Car"
 import { handleCheatCodeSystem } from "./cheat-system/CheatSystem"
-import { CustomKeys, GunData } from "./ConstantsAndTypes"
+import { CustomKeys, GunData, STORYLINE_MISSIONS } from "./ConstantsAndTypes"
+import { Cop } from "./cops/Cop"
 import { SetupEasyStar } from "./easystar/Easystar"
 import { EnemyNew } from "./enemy/EnemyNew"
 import { handleGunRotation, handleGunThrow } from "./gun/Gun"
@@ -15,15 +16,20 @@ import {
   handleUi,
   setupControls,
   setupParticleSystem,
+  showTopLeftOverlayText,
 } from "./HelperFunctions"
 import { createMap } from "./map/Map"
-import { NPC } from "./npc/Npc"
+import { EnemyCar } from "./mission/MissionEnemyCar"
+import { MissionMarker } from "./mission/MissionMarker"
+import { manageNPCsCount } from "./npc/Npc"
 import { cameraFollowPlayer } from "./player/Camera"
 import {
+  drawPlayerHealthBar,
   handlePlayerMovement,
   PlayerCharacter,
   setupPlayerParent,
 } from "./player/Player"
+import { preloadAssets } from "./PreloadAssets"
 
 export class MyGame extends Phaser.Scene {
   easystar!: EasyStar.js
@@ -46,6 +52,7 @@ export class MyGame extends Phaser.Scene {
   isPlayerIncar: boolean = false
   carBeingDrivenByPlayer: Car | null = null
 
+  // Enemies Related
   enemies: EnemyNew[] = []
   enemy1!: EnemyNew
   enemyParent!: Phaser.GameObjects.Container
@@ -55,17 +62,37 @@ export class MyGame extends Phaser.Scene {
   enemyShootTimer!: Phaser.Time.TimerEvent
   enemyGun!: Phaser.GameObjects.Sprite
 
+  // Particle Systems
   bloodParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
   missionMarkerPickedParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
   explosionParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
 
-  missionStarted: boolean = false
+  // Missions Related
   missionEnemies: EnemyNew[] = []
+  storylineMission: {
+    started: boolean
+    currentMission: {
+      missionFunction: (scene: MyGame) => void
+      missionMarkerPosition: { x: number; y: number }
+    }
+  } = {
+    started: false,
+    currentMission: STORYLINE_MISSIONS.MISSION_ONE,
+  }
+  missionEnemyCars: EnemyCar[] = []
 
+  // Wanted Level Related
   wantedLevel: number = 0
+  wantedStars: Phaser.GameObjects.Image[] = []
+  cops: Cop[] = []
 
+  // NPC Related
   npcsGroup!: Phaser.Physics.Arcade.Group
+  readonly MAX_NPC_COUNT = 6
+  readonly NPC_SPAWN_RADIUS = 1500
+  readonly NPC_REMOVAL_DISTANCE = 2000
 
+  // Cheat System related
   weaponCheatActivation: {
     status: boolean
     index: number
@@ -85,41 +112,24 @@ export class MyGame extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("tileset", "/map-elements/tileset.png")
-    this.load.tilemapTiledJSON("map", "/map-elements/tiled-tilemap-json.json")
-    this.load.image("player", "/images/player.png")
-    this.load.image("pistol", "/images/pistol.png")
-    this.load.image("player-with-gun", "/images/player-with-gun.png")
-    this.load.image("bullet", "/images/bullet.png")
-    this.load.image("blood-drop", "/images/blood-drop.png")
-    this.load.image("diamond-shape", "/images/diamond-shape.png")
-    this.load.image("topdown-car", "/images/topdown-car.png")
-    this.load.image("white-circle", "/images/white-circle.png")
-    this.load.image("npc", "/images/npc.png")
-    this.load.audio("bgMusic", "/audio/bg-music.mp3")
-    this.load.image("shotgun", "/images/shotgun.png")
-    this.load.image("sniper", "/images/sniper.png")
-    this.load.image("smg", "/images/smg.png")
-    this.load.image("rocket-launcher", "/images/rocket-launcher.png")
-    this.load.image(
-      "rocket-launcher-bullet",
-      "/images/rocket-launcher-bullet.png"
-    )
-    this.load.image("cop-car", "/images/cop.png")
-    this.load.image("npc-male", "/images/npc-male.png")
-    this.load.image("npc-female", "/images/npc-female.png")
+    preloadAssets(this)
   }
 
   create() {
     this.carsGroup = this.physics.add.group()
     this.npcsGroup = this.physics.add.group()
+    this.enemyBullets = this.physics.add.group({
+      classType: Phaser.Physics.Arcade.Image,
+      maxSize: 0,
+      runChildUpdate: true,
+    })
 
     const music = this.sound.add("bgMusic", {
       loop: true,
       volume: 0.2,
     })
 
-    // music.play()
+    music.play()
 
     const { map, houses, roads, backgroundLayer, water } = createMap(this)
     this.map = map
@@ -127,11 +137,11 @@ export class MyGame extends Phaser.Scene {
     this.cursors = setupControls(this)
     this.gunsGroup = this.physics.add.group()
 
-    this.mapGrid = SetupEasyStar(this, houses!)
+    this.mapGrid = SetupEasyStar(this)
 
     addingGunstoMap(this)
 
-    this.PlayerParent = setupPlayerParent(this, 700, 300)
+    this.PlayerParent = setupPlayerParent(this, 8500, 5500)
 
     // Bullet pool
     createPlayerBullets(this)
@@ -142,37 +152,36 @@ export class MyGame extends Phaser.Scene {
     // UI
     handleUi(this)
 
+    const car = new Car(this, 8500, 5500, "topdown-car", this.cursors)
+
     // Particle Systems
     setupParticleSystem(this)
 
-    // new MissionMarker(this, 1100, 400, () => {
-    //   showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
+    new MissionMarker(
+      this,
+      this.storylineMission.currentMission.missionMarkerPosition.x,
+      this.storylineMission.currentMission.missionMarkerPosition.y,
+      () => {
+        showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
 
-    //   this.missionStarted = true
+        this.missionEnemies = []
+        this.storylineMission.started = true
 
-    //   const missionKeys = Object.keys(MISSIONS) as Array<keyof typeof MISSIONS>
-    //   const randomIndex = Math.floor(Math.random() * missionKeys.length)
-    //   const randomMissionKey: keyof typeof MISSIONS = missionKeys[randomIndex]
-    //   const randomMission = MISSIONS[randomMissionKey]
-
-    //   randomMission(this)
-    // })
-
-    // const car = new Car(this, 1100, 500, "topdown-car", this.cursors)
-    // this.carsGroup.add(car)
-
-    for (let i = 0; i < 4; i++) {
-      new NPC(this, ["npc-male", "npc-female"]) // you can pass different sprite keys like "npc2", "npcGuard", etc.
-    }
+        this.storylineMission.currentMission.missionFunction(this)
+      }
+    )
 
     // Colliders
-    handleCollisions(this, houses, water, this.cursors)
-    this.drawPlayerHealthBar((this.PlayerParent as any).health)
+    handleCollisions(this, houses, water)
+
+    drawPlayerHealthBar(this, (this.PlayerParent as any).health)
   }
 
   // Modified MyGame update function with debug visualization
   update() {
     handleCheatCodeSystem(this, this.cursors)
+
+    manageNPCsCount(this)
 
     this.bulletText.setText(`Bullets: ${this.currentGun?.ammo || 0}`)
     handlePlayerMovement(this.PlayerParent, this.cursors)
@@ -189,20 +198,9 @@ export class MyGame extends Phaser.Scene {
 
     checkBulletAndOtherObjectsCollision(this)
     detectWeaponCheatWeaponChange(this)
-  }
 
-  drawPlayerHealthBar(health: number) {
-    const maxHealth = 100
-    const currentHealth = Phaser.Math.Clamp(health, 0, maxHealth)
-    const percent = currentHealth / maxHealth
-
-    const barWidth = 200
-    const barHeight = 20
-    const x = this.scale.width - barWidth - 10
-    const y = 10
-
-    this.playerHealthBar.clear()
-    this.playerHealthBar.fillStyle(0xff0000)
-    this.playerHealthBar.fillRect(x, y, barWidth * percent, barHeight)
+    this.missionEnemyCars.forEach((car) => {
+      car.update()
+    })
   }
 }

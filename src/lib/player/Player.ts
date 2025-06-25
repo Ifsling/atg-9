@@ -20,7 +20,7 @@ export function damagePlayer(scene: MyGame, damageAmount: number) {
 
   if (playerParent.health > 0) {
     playerParent.health -= damageAmount
-    scene.drawPlayerHealthBar(playerParent.health)
+    drawPlayerHealthBar(scene, playerParent.health)
 
     if (playerParent.health <= 0) {
       damagePlayer(scene, 0)
@@ -45,7 +45,7 @@ export function damagePlayer(scene: MyGame, damageAmount: number) {
         runChildUpdate: true,
       })
     }
-    scene.drawPlayerHealthBar(playerParent.health)
+    drawPlayerHealthBar(scene, playerParent.health)
 
     const deathAudio = new Audio("/audio/death.wav")
     deathAudio.play()
@@ -69,7 +69,9 @@ export function setupPlayerParent(scene: MyGame, x: number, y: number) {
     -scene.player.displayWidth / 2,
     -scene.player.displayHeight / 2
   )
-  ;(scene.PlayerParent as any).health = 30
+
+  // Player HEALTH
+  ;(scene.PlayerParent as any).health = 100
 
   return scene.PlayerParent
 }
@@ -113,4 +115,19 @@ export function handlePlayerMovement(
   } else if (cursors.down.isDown || cursors.downArrow.isDown) {
     body.setVelocityY(speed)
   }
+}
+
+export function drawPlayerHealthBar(scene: MyGame, health: number) {
+  const maxHealth = 100
+  const currentHealth = Phaser.Math.Clamp(health, 0, maxHealth)
+  const percent = currentHealth / maxHealth
+
+  const barWidth = 200
+  const barHeight = 20
+  const x = scene.scale.width - barWidth - 10
+  const y = 10
+
+  scene.playerHealthBar.clear()
+  scene.playerHealthBar.fillStyle(0xff0000)
+  scene.playerHealthBar.fillRect(x, y, barWidth * percent, barHeight)
 }

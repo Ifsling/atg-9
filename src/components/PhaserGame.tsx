@@ -11,8 +11,7 @@ type GameStates = "menu" | "gameplay" | "gameOver"
 export default function PhaserGame() {
   const gameRef = useRef<Phaser.Game | null>(null)
 
-  const [currentGameState, setCurrentGameState] =
-    useState<GameStates>("gameplay")
+  const [currentGameState, setCurrentGameState] = useState<GameStates>("menu")
 
   useEffect(() => {
     const config = {

@@ -1,5 +1,11 @@
-import { RandomLocationsForNpcs } from "../ConstantsAndTypes"
+import { SpawnableLocationsInGridCount } from "../ConstantsAndTypes"
+import { createCop } from "../cops/Cop"
+import { displayWantedLevelStars } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
+import {
+  getRandomSpawnLocationWithinRadius,
+  gridToWorldCoordinates,
+} from "../utils"
 
 export class NPC {
   scene: MyGame
@@ -8,54 +14,61 @@ export class NPC {
   health: number = 100
   maxHealth: number = 100
   targetLocation: { x: number; y: number } | null = null
-  speed: number = 50
-  isMoving: boolean = false
+  speed: number = 100
 
-  constructor(scene: MyGame, spritesArray: string[]) {
+  path: { x: number; y: number }[] = []
+  pathStep: number = 0
+
+  constructor(
+    scene: MyGame,
+    spritesArray: string[],
+    spawnAt?: { x: number; y: number }
+  ) {
     this.scene = scene
 
-    const spawnPoint = Phaser.Utils.Array.GetRandom(RandomLocationsForNpcs) as {
-      x: number
-      y: number
+    let spawnPoint =
+      spawnAt ??
+      getRandomSpawnLocationWithinRadius(
+        scene.playerParentBody.x,
+        scene.playerParentBody.y,
+        scene.NPC_SPAWN_RADIUS
+      )
+
+    // Ensure NPC spawns only on road tiles
+    while (!isRoadTile(spawnPoint.x, spawnPoint.y, scene)) {
+      spawnPoint = getRandomSpawnLocationWithinRadius(
+        scene.playerParentBody.x,
+        scene.playerParentBody.y,
+        scene.NPC_SPAWN_RADIUS
+      )
     }
 
-    const randNum = Math.floor(Math.random() * spritesArray.length)
-    const spriteKey = spritesArray[randNum]
+    const spriteKey = Phaser.Utils.Array.GetRandom(spritesArray)
 
-    // Create NPC sprite
     this.sprite = scene.physics.add
       .sprite(spawnPoint.x, spawnPoint.y, spriteKey)
       .setScale(0.4)
       .setDepth(1)
 
     this.sprite.setCollideWorldBounds(true)
-    this.sprite.setData("ref", this) // Store reference to this class instance
-
-    // Add to npc group
-    scene.npcsGroup.add(this.sprite)
+    this.sprite.setData("ref", this)
 
     this.healthBar = scene.add.graphics()
+    this.healthBar.setDepth(10)
+
+    scene.npcsGroup.add(this.sprite)
 
     this.pickNewTarget()
 
-    // Start movement loop
+    // Recalculate path every second
     scene.time.addEvent({
-      delay: 300,
-      loop: true,
-      callback: this.updateMovement,
-      callbackScope: this,
-    })
-
-    scene.time.addEvent({
-      delay: 1000, // every second
+      delay: 1000,
       loop: true,
       callback: () => {
         if (!this.sprite?.active) return
-        this.startPathfinding(this.scene)
+        this.startPathfinding()
       },
     })
-
-    this.healthBar.setDepth(10)
   }
 
   drawHealthBar() {
@@ -71,82 +84,33 @@ export class NPC {
     this.healthBar.fillStyle(0x00ff00)
     this.healthBar.fillRect(x - width / 2, y, width * ratio, height)
 
-    // Optional: only show if health is not full
     this.healthBar.setVisible(ratio < 1)
   }
 
-  updateMovement() {
-    if (!this.targetLocation || !this.sprite.body) return
-
-    const dist = Phaser.Math.Distance.Between(
-      this.sprite.x,
-      this.sprite.y,
-      this.targetLocation.x,
-      this.targetLocation.y
-    )
-
-    if (dist < 8) {
-      this.sprite.setVelocity(0)
-      this.pickNewTarget()
-      return
-    }
-
-    const angle = Phaser.Math.Angle.Between(
-      this.sprite.x,
-      this.sprite.y,
-      this.targetLocation.x,
-      this.targetLocation.y
-    )
-
-    const velocityX = Math.cos(angle) * this.speed
-    const velocityY = Math.sin(angle) * this.speed
-
-    this.sprite.setVelocity(velocityX, velocityY)
-    this.drawHealthBar()
-  }
-
   pickNewTarget() {
-    let newTarget = Phaser.Utils.Array.GetRandom(RandomLocationsForNpcs)
+    let newTargetGrid = Phaser.Utils.Array.GetRandom(
+      SpawnableLocationsInGridCount
+    )
 
-    // Avoid going to the same spot
     while (
       this.targetLocation &&
-      newTarget.x === this.targetLocation.x &&
-      newTarget.y === this.targetLocation.y
+      newTargetGrid.x === this.targetLocation.x &&
+      newTargetGrid.y === this.targetLocation.y
     ) {
-      newTarget = Phaser.Utils.Array.GetRandom(RandomLocationsForNpcs)
+      newTargetGrid = Phaser.Utils.Array.GetRandom(
+        SpawnableLocationsInGridCount
+      )
     }
 
-    this.targetLocation = newTarget
-  }
-
-  takeDamage(amount: number) {
-    this.health -= amount
-
-    if (this.health <= 0) {
-      this.destroy()
-    } else {
-      this.healthBar.setVisible(true)
-      this.drawHealthBar()
-    }
-  }
-
-  destroy() {
-    this.scene.bloodParticleSystem.explode(
-      40,
-      (this.sprite.x || 0) - 100,
-      (this.sprite.y || 0) - 100
+    const newTargetWorld = gridToWorldCoordinates(
+      newTargetGrid.x,
+      newTargetGrid.y
     )
 
-    const deathAudio = new Audio("/audio/explosion.wav")
-    deathAudio.play()
-
-    this.sprite.destroy()
-    this.healthBar.destroy()
+    this.targetLocation = newTargetWorld
   }
 
-  // Inside NPC class
-  startPathfinding(scene: MyGame) {
+  startPathfinding() {
     if (!this.targetLocation || !this.sprite.body) return
 
     const dist = Phaser.Math.Distance.Between(
@@ -162,39 +126,39 @@ export class NPC {
     }
 
     const tileSize = this.scene.map.tileWidth
-
     const fromX = Math.floor(this.sprite.x / tileSize)
     const fromY = Math.floor(this.sprite.y / tileSize)
+    const toX = Math.floor(this.targetLocation.x / tileSize)
+    const toY = Math.floor(this.targetLocation.y / tileSize)
 
-    const toX = Math.floor(this.targetLocation!.x / tileSize)
-    const toY = Math.floor(this.targetLocation!.y / tileSize)
-
-    scene.easystar.findPath(fromX, fromY, toX, toY, (path) => {
+    this.scene.easystar.findPath(fromX, fromY, toX, toY, (path) => {
       if (!this.sprite?.active) return
-      if (path && path.length > 0) {
-        this.followPath(path, tileSize, scene)
+
+      if (path && path.length > 1) {
+        this.followPath(path, tileSize)
+      } else {
+        // No valid path found
+        this.sprite.setVelocity(0)
+        this.pickNewTarget()
       }
     })
 
-    scene.easystar.calculate()
+    this.scene.easystar.calculate()
   }
 
-  followPath(
-    path: { x: number; y: number }[],
-    tileSize: number,
-    scene: Phaser.Scene
-  ) {
-    if (path.length < 2) return
-
-    let step = 1
+  followPath(path: { x: number; y: number }[], tileSize: number) {
+    this.path = path
+    this.pathStep = 1
 
     const moveToNextTile = () => {
-      if (step >= path.length) {
+      if (this.pathStep >= this.path.length) {
         this.sprite.setVelocity(0)
+        this.path = []
+        this.pickNewTarget()
         return
       }
 
-      const nextTile = path[step]
+      const nextTile = this.path[this.pathStep]
       const targetX = nextTile.x * tileSize + tileSize / 2
       const targetY = nextTile.y * tileSize + tileSize / 2
 
@@ -205,14 +169,12 @@ export class NPC {
         targetY
       )
 
-      const speed = 100
-      const velocityX = Math.cos(angle) * speed
-      const velocityY = Math.sin(angle) * speed
+      const velocityX = Math.cos(angle) * this.speed
+      const velocityY = Math.sin(angle) * this.speed
 
       this.sprite.setVelocity(velocityX, velocityY)
 
-      // Check if close to the target tile, then go to next step
-      const checkArrival = scene.time.addEvent({
+      const checkArrival = this.scene.time.addEvent({
         delay: 100,
         loop: true,
         callback: () => {
@@ -226,7 +188,7 @@ export class NPC {
           if (dist < 8) {
             this.sprite.setVelocity(0)
             checkArrival.remove()
-            step++
+            this.pathStep++
             moveToNextTile()
           }
         },
@@ -234,5 +196,111 @@ export class NPC {
     }
 
     moveToNextTile()
+  }
+
+  takeDamage(amount: number) {
+    this.health -= amount
+
+    if (this.health <= 0) {
+      this.destroy()
+    } else {
+      this.healthBar.setVisible(true)
+      this.drawHealthBar()
+    }
+  }
+
+  destroy(isKilledByPlayer: boolean = true) {
+    this.scene.bloodParticleSystem.explode(
+      40,
+      (this.sprite.x || 0) - 100,
+      (this.sprite.y || 0) - 100
+    )
+
+    if (isKilledByPlayer) {
+      const deathAudio = new Audio("/audio/explosion.wav")
+      deathAudio.play()
+
+      this.scene.wantedLevel = Math.min(this.scene.wantedLevel + 1, 5)
+      displayWantedLevelStars(this.scene)
+      createCop(this.scene)
+    }
+
+    this.scene.npcsGroup.remove(this.sprite, true, true)
+    this.sprite.destroy()
+    this.healthBar.destroy()
+  }
+}
+
+// Helper function to ensure spawn is on road
+function isRoadTile(x: number, y: number, scene: MyGame): boolean {
+  const tileX = Math.floor(x / scene.map.tileWidth)
+  const tileY = Math.floor(y / scene.map.tileHeight)
+  const tile = scene.map.getTileAt(tileX, tileY, false, "Road")
+  return tile !== null
+}
+
+export function spawnNpcNearPlayer(scene: MyGame) {
+  const playerX = scene.playerParentBody.x
+  const playerY = scene.playerParentBody.y
+  const camera = scene.cameras.main
+
+  const tileSize = scene.map.tileWidth
+  const margin = 200 // How far outside the screen to allow spawning
+
+  let spawnPoint: { x: number; y: number }
+  let attempts = 0
+  const maxAttempts = 50
+
+  do {
+    spawnPoint = getRandomSpawnLocationWithinRadius(
+      playerX,
+      playerY,
+      scene.NPC_SPAWN_RADIUS
+    )
+
+    const isOnRoad = isRoadTile(spawnPoint.x, spawnPoint.y, scene)
+
+    const isOutsideView =
+      spawnPoint.x < camera.worldView.x - margin ||
+      spawnPoint.x > camera.worldView.x + camera.width + margin ||
+      spawnPoint.y < camera.worldView.y - margin ||
+      spawnPoint.y > camera.worldView.y + camera.height + margin
+
+    if (isOnRoad && isOutsideView) {
+      break
+    }
+
+    attempts++
+  } while (attempts < maxAttempts)
+
+  new NPC(scene, ["npc-male", "npc-female"], spawnPoint)
+}
+
+export function manageNPCsCount(scene: MyGame) {
+  // Maintain NPC count near player
+  const playerX = scene.playerParentBody.x
+  const playerY = scene.playerParentBody.y
+
+  // Remove NPCs too far away
+  scene.npcsGroup.getChildren().forEach((npcSprite: any) => {
+    const npc = npcSprite.getData("ref") as NPC
+    const dist = Phaser.Math.Distance.Between(
+      npc.sprite.x,
+      npc.sprite.y,
+      playerX,
+      playerY
+    )
+
+    if (dist > scene.NPC_REMOVAL_DISTANCE) {
+      npc.destroy(false)
+    }
+  })
+
+  // Check and maintain NPC count
+  const currentNpcCount = scene.npcsGroup.getChildren().length
+  const npcsToSpawn = scene.MAX_NPC_COUNT - currentNpcCount
+
+  for (let i = 0; i < npcsToSpawn; i++) {
+    spawnNpcNearPlayer(scene)
   }
 }

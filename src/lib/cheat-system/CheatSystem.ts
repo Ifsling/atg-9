@@ -1,13 +1,18 @@
 import { CustomKeys } from "../ConstantsAndTypes"
+import { createCop } from "../cops/Cop"
 import {
   SpawnPistol,
   SpawnRocketLauncher,
   SpawnShotgun,
   SpawnSMG,
 } from "../gun/GenerateGuns"
-import { handleGunPickup } from "../gun/Gun"
-import { showTopLeftOverlayText } from "../HelperFunctions"
+import { handleGunPickup, throwGun } from "../gun/Gun"
+import {
+  displayWantedLevelStars,
+  showTopLeftOverlayText,
+} from "../HelperFunctions"
 import { MyGame } from "../MyGame"
+import { drawPlayerHealthBar } from "../player/Player"
 
 let consoleOpen = false
 let inputElement: Phaser.GameObjects.DOMElement | null = null
@@ -187,7 +192,7 @@ function processCheatCode(scene: MyGame, code: string) {
   switch (code.toLowerCase()) {
     case "atglifemod":
       ;(scene.PlayerParent as any).health = 100
-      scene.drawPlayerHealthBar(100)
+      drawPlayerHealthBar(scene, 100)
       showTopLeftOverlayText(
         scene,
         "Cheat activated: Full Health",
@@ -197,13 +202,13 @@ function processCheatCode(scene: MyGame, code: string) {
       )
       break
 
-    case "godmode":
+    case "atggodmode":
       ;(scene.PlayerParent as any).health = 1000
-      scene.drawPlayerHealthBar(1000)
+      drawPlayerHealthBar(scene, 1000)
       showTopLeftOverlayText(scene, "Cheat activated: God Mode", 10, 70, 5000)
       break
 
-    case "ammo":
+    case "atgammo":
       if (scene.currentGun) {
         scene.currentGun.ammo = scene.currentGun.maxAmmo
         showTopLeftOverlayText(
@@ -216,12 +221,42 @@ function processCheatCode(scene: MyGame, code: string) {
       }
       break
 
-    case "weapons":
+    case "atgweapons":
       // Give all weapons
+      throwGun(scene)
       handleWeaponsCheatSystem(scene)
       showTopLeftOverlayText(
         scene,
         "Cheat activated: All Weapons",
+        10,
+        70,
+        5000
+      )
+      break
+
+    case "atgincreasewanted":
+      scene.wantedLevel = Math.min((scene.wantedLevel += 2), 5)
+      displayWantedLevelStars(scene)
+      createCop(scene)
+      showTopLeftOverlayText(
+        scene,
+        "Cheat activated: Wanted Level Increased",
+        10,
+        70,
+        5000
+      )
+      break
+
+    case "atgremovewanted":
+      scene.wantedLevel = 0
+      displayWantedLevelStars(scene)
+      scene.cops.forEach((cop) => {
+        cop.sprite.destroy()
+      })
+      scene.cops = []
+      showTopLeftOverlayText(
+        scene,
+        "Cheat activated: Wanted Level Cleared",
         10,
         70,
         5000

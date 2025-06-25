@@ -1,5 +1,6 @@
-import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
+import { calculateDistance } from "../utils"
+import { completeMission } from "./EnemyKillingMissionsCompletion"
 
 export class EnemyNew {
   scene: MyGame
@@ -11,12 +12,14 @@ export class EnemyNew {
   healthBar!: Phaser.GameObjects.Graphics
   shootTimer!: Phaser.Time.TimerEvent
   shouldFollowPlayer: boolean = false
+  isChoosenMissionEnemy: boolean = false
 
   constructor(
     scene: MyGame,
     x: number = 1100,
     y: number = 300,
-    shouldFollowPlayer: boolean = false
+    shouldFollowPlayer: boolean = false,
+    shootPlayer: boolean = true
   ) {
     this.scene = scene
     this.shouldFollowPlayer = shouldFollowPlayer
@@ -32,7 +35,7 @@ export class EnemyNew {
     // Create bullets group
     this.enemyBullets = scene.physics.add.group({
       classType: Phaser.Physics.Arcade.Image,
-      maxSize: 20,
+      maxSize: 200,
       runChildUpdate: true,
     })
 
@@ -41,12 +44,14 @@ export class EnemyNew {
     this.drawHealthBar()
 
     // Setup shooting timer
-    this.shootTimer = scene.time.addEvent({
-      delay: 1000,
-      loop: true,
-      callback: this.shootAtPlayer,
-      callbackScope: this,
-    })
+    if (shootPlayer) {
+      this.shootTimer = scene.time.addEvent({
+        delay: 1000,
+        loop: true,
+        callback: this.shootAtPlayer,
+        callbackScope: this,
+      })
+    }
 
     if (shouldFollowPlayer) {
       scene.time.addEvent({
@@ -113,6 +118,14 @@ export class EnemyNew {
       ? this.scene.carBeingDrivenByPlayer
       : this.scene.PlayerParent
 
+    if (
+      calculateDistance(
+        { x: this.enemySprite.x, y: this.enemySprite.y },
+        { x: player!.x, y: player!.y }
+      ) > 1500
+    )
+      return
+
     const angle = Phaser.Math.Angle.Between(
       this.enemySprite.x,
       this.enemySprite.y,
@@ -163,7 +176,7 @@ export class EnemyNew {
       this.enemySprite.body?.y
     )
 
-    this.shootTimer.remove()
+    this.shootTimer?.remove()
 
     this.enemyBullets.clear(true, true)
     this.enemyGun.destroy()
@@ -182,9 +195,9 @@ export class EnemyNew {
       this.scene.missionEnemies.splice(missionIndex, 1)
     }
 
-    // Check if all mission enemies are dead
-    if (this.scene.missionStarted && this.scene.missionEnemies.length === 0) {
-      showTopLeftOverlayText(this.scene, "Mission Completed", 20, 70, 3000)
+    // Check if storyline mission is completed
+    if (this.scene.storylineMission.started) {
+      completeMission(this.scene, this.isChoosenMissionEnemy)
     }
   }
 
