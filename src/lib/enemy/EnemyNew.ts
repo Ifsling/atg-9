@@ -1,4 +1,5 @@
 import { MyGame } from "../MyGame"
+import { calculateDistance } from "../utils"
 import { completeMission } from "./EnemyKillingMissionsCompletion"
 
 export class EnemyNew {
@@ -116,6 +117,14 @@ export class EnemyNew {
     const player = this.scene.isPlayerIncar
       ? this.scene.carBeingDrivenByPlayer
       : this.scene.PlayerParent
+
+    if (
+      calculateDistance(
+        { x: this.enemySprite.x, y: this.enemySprite.y },
+        { x: player!.x, y: player!.y }
+      ) > 1500
+    )
+      return
 
     const angle = Phaser.Math.Angle.Between(
       this.enemySprite.x,

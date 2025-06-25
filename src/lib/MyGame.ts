@@ -19,6 +19,7 @@ import {
   showTopLeftOverlayText,
 } from "./HelperFunctions"
 import { createMap } from "./map/Map"
+import { EnemyCar } from "./mission/MissionEnemyCar"
 import { MissionMarker } from "./mission/MissionMarker"
 import { manageNPCsCount } from "./npc/Npc"
 import { cameraFollowPlayer } from "./player/Camera"
@@ -76,8 +77,9 @@ export class MyGame extends Phaser.Scene {
     }
   } = {
     started: false,
-    currentMission: STORYLINE_MISSIONS.MISSION_FIVE,
+    currentMission: STORYLINE_MISSIONS.MISSION_ONE,
   }
+  missionEnemyCars: EnemyCar[] = []
 
   // Wanted Level Related
   wantedLevel: number = 0
@@ -135,7 +137,7 @@ export class MyGame extends Phaser.Scene {
     this.cursors = setupControls(this)
     this.gunsGroup = this.physics.add.group()
 
-    this.mapGrid = SetupEasyStar(this, houses!)
+    this.mapGrid = SetupEasyStar(this)
 
     addingGunstoMap(this)
 
@@ -196,5 +198,9 @@ export class MyGame extends Phaser.Scene {
 
     checkBulletAndOtherObjectsCollision(this)
     detectWeaponCheatWeaponChange(this)
+
+    this.missionEnemyCars.forEach((car) => {
+      car.update()
+    })
   }
 }

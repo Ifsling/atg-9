@@ -6,7 +6,7 @@ import {
   SpawnShotgun,
   SpawnSMG,
 } from "../gun/GenerateGuns"
-import { handleGunPickup } from "../gun/Gun"
+import { handleGunPickup, throwGun } from "../gun/Gun"
 import {
   displayWantedLevelStars,
   showTopLeftOverlayText,
@@ -223,6 +223,7 @@ function processCheatCode(scene: MyGame, code: string) {
 
     case "atgweapons":
       // Give all weapons
+      throwGun(scene)
       handleWeaponsCheatSystem(scene)
       showTopLeftOverlayText(
         scene,

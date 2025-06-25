@@ -1,5 +1,7 @@
+import { Mission_BlastRobberCar } from "./mission/Mission_BlastRobberCar"
 import { Mission_BringBackAnesthetics } from "./mission/Mission_BringBackAnesthetics"
 import { Mission_EnemyChasingYou } from "./mission/Mission_EnemyChasingYou"
+import { Mission_FinalSquadWipeout } from "./mission/Mission_FinalSquadWipeout"
 import { Mission_KillTheMedHider } from "./mission/Mission_KillTheMedHider"
 import { Mission_PickUpFather } from "./mission/Mission_PickUpFather"
 import { Mission_SquadWipe } from "./mission/Mission_SquadWipe"
@@ -445,7 +447,15 @@ export const STORYLINE_MISSIONS = {
     missionMarkerPosition: { x: 9150, y: 5250 },
   },
   MISSION_SIX: {
-    missionFunction: () => {},
+    missionFunction: Mission_BlastRobberCar,
     missionMarkerPosition: { x: 8550, y: 2250 },
+  },
+  MISSION_SEVEN: {
+    missionFunction: Mission_FinalSquadWipeout,
+    missionMarkerPosition: { x: 9150, y: 1050 },
+  },
+  MISSIONS_COMPLETED: {
+    missionFunction: () => {},
+    missionMarkerPosition: { x: -1, y: -1 },
   },
 }

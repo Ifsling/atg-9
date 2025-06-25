@@ -58,7 +58,13 @@ export function handleGunRotation(scene: MyGame) {
 }
 
 export function handleGunThrow(scene: MyGame, cursors: CustomKeys) {
-  if (cursors.t.isDown && scene.currentGun) {
+  if (cursors.t.isDown) {
+    throwGun(scene)
+  }
+}
+
+export function throwGun(scene: MyGame) {
+  if (scene.currentGun) {
     scene.canPickupGun = true
 
     // Remove gun sprite from player

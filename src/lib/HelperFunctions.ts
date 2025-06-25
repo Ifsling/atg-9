@@ -356,6 +356,15 @@ export function checkBulletAndOtherObjectsCollision(scene: MyGame) {
         console.warn("NPC instance not found on sprite data!")
       }
     })
+
+    // Enemy Car
+    scene.missionEnemyCars.forEach((enemyCar) => {
+      if (!enemyCar.destroyed) {
+        checkCollision(bullet, enemyCar.sprite, () =>
+          enemyCar.takeDamage(damageAmount)
+        )
+      }
+    })
   })
 }
 

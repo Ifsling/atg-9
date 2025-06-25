@@ -70,5 +70,15 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
         }
       )
     }
+  } else if (
+    scene.storylineMission.currentMission ===
+      STORYLINE_MISSIONS.MISSION_SEVEN &&
+    scene.missionEnemies.length === 0
+  ) {
+    showTopLeftOverlayText(scene, "Mission Completed", 20, 70, 3000)
+    scene.storylineMission.currentMission =
+      STORYLINE_MISSIONS.MISSIONS_COMPLETED
+
+    // Play final get together cutscene here
   }
 }
