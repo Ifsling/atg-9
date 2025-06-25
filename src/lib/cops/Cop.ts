@@ -111,8 +111,8 @@ export class Cop {
     if (this.health <= 0) {
       // Use body position if available
       const body = this.sprite.body as Phaser.Physics.Arcade.Body
-      const bloodX = body?.x - 10 ?? this.sprite.x
-      const bloodY = body?.y - 10 ?? this.sprite.y
+      const bloodX = body ? body.x - 10 : this.sprite.x
+      const bloodY = body ? body.y - 10 : this.sprite.y
 
       this.scene.bloodParticleSystem.explode(40, bloodX, bloodY)
 
