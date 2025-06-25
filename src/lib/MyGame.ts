@@ -129,7 +129,7 @@ export class MyGame extends Phaser.Scene {
       volume: 0.2,
     })
 
-    // music.play()
+    music.play()
 
     const { map, houses, roads, backgroundLayer, water } = createMap(this)
     this.map = map
