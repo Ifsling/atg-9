@@ -3,7 +3,7 @@ import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 import { MissionEndMarker } from "./MissionEndMarker"
 import { MissionFather } from "./MissionFather"
-import { MissionMarker } from "./MissionMarker"
+import { StartCurrentMission } from "./MissionHelperFunctions"
 
 export function Mission_PickUpFather(scene: MyGame) {
   const fatherSpawnPosition =
@@ -42,22 +42,12 @@ export function Mission_PickUpFather(scene: MyGame) {
           scene.time.delayedCall(2000, () => {
             father.sprite.destroy()
             showTopLeftOverlayText(scene, "Mission Completed", 20, 70, 3000)
+            scene.storylineMission.started = false
 
             scene.storylineMission.currentMission =
               STORYLINE_MISSIONS.MISSION_FOUR
 
-            new MissionMarker(
-              scene,
-              scene.storylineMission.currentMission.missionMarkerPosition.x,
-              scene.storylineMission.currentMission.missionMarkerPosition.y,
-              () => {
-                showTopLeftOverlayText(scene, "Mission Started", 20, 70, 3000)
-
-                scene.missionEnemies = []
-                scene.storylineMission.started = true
-                scene.storylineMission.currentMission.missionFunction(scene)
-              }
-            )
+            StartCurrentMission(scene)
           })
         },
         "only_car"

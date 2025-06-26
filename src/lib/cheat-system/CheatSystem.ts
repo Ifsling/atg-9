@@ -1,3 +1,4 @@
+import { Car } from "../car/Car"
 import { CustomKeys } from "../ConstantsAndTypes"
 import { createCop } from "../cops/Cop"
 import {
@@ -13,6 +14,7 @@ import {
 } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 import { drawPlayerHealthBar } from "../player/Player"
+import { getRandomSpawnLocationWithinRadius } from "../utils"
 
 let consoleOpen = false
 let inputElement: Phaser.GameObjects.DOMElement | null = null
@@ -257,6 +259,35 @@ function processCheatCode(scene: MyGame, code: string) {
       showTopLeftOverlayText(
         scene,
         "Cheat activated: Wanted Level Cleared",
+        10,
+        70,
+        5000
+      )
+      break
+
+    case "atgcar":
+      // Spawn a random car
+      const { x, y } = scene.playerParentBody
+
+      const spawnLocation = getRandomSpawnLocationWithinRadius(x, y, 300)
+      if (spawnLocation.x === -1 && spawnLocation.y === -1) {
+        showTopLeftOverlayText(
+          scene,
+          "You need to be near a road to spawn a car",
+          10,
+          70,
+          3400
+        )
+        return
+      }
+
+      new Car(scene, spawnLocation.x, spawnLocation.y, "topdown-car")
+
+      console.log(scene.carsGroup)
+
+      showTopLeftOverlayText(
+        scene,
+        "Cheat activated: Random Car Spawned",
         10,
         70,
         5000

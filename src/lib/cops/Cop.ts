@@ -64,12 +64,12 @@ export class Cop {
     )
 
     if (dist > this.shootRange) {
-      this.sprite.setVelocity(
+      this.sprite?.setVelocity(
         Math.cos(angle) * this.speed,
         Math.sin(angle) * this.speed
       )
     } else {
-      this.sprite.setVelocity(0)
+      this.sprite?.setVelocity(0)
       this.shootAtPlayer(angle, player!)
     }
   }
@@ -96,7 +96,7 @@ export class Cop {
     bullet.body!.setOffset(bullet.width * 0.1, bullet.height * 0.1)
 
     bullet.setRotation(angle)
-    bullet.setVelocity(
+    bullet?.setVelocity(
       Math.cos(angle) * this.bulletSpeed,
       Math.sin(angle) * this.bulletSpeed
     )

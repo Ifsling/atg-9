@@ -1,3 +1,5 @@
+import { STORYLINE_MISSIONS } from "../ConstantsAndTypes"
+import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 
 export function handleShooting(scene: MyGame) {
@@ -10,6 +12,27 @@ export function handleShooting(scene: MyGame) {
       scene.currentGun &&
       scene.currentGun.ammo > 0
     ) {
+      if (
+        scene.storylineMission.started &&
+        scene.storylineMission.currentMission === STORYLINE_MISSIONS.MISSION_ONE
+      ) {
+        if (!scene.onceTimeUsuableFlag) {
+          scene.onceTimeUsuableFlag = true
+          showTopLeftOverlayText(
+            scene,
+            "Guns are disabled for this mission",
+            20,
+            70,
+            3000
+          )
+
+          scene.time.delayedCall(3000, () => {
+            scene.onceTimeUsuableFlag = false
+          })
+        }
+        return
+      }
+
       // getting current gun type
       const currentGun = scene.currentGun
 
@@ -121,7 +144,7 @@ export function shootRocketLauncher(
 
   // Set bullet velocity
   const speed = 500
-  bullet.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed)
+  bullet?.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed)
 
   // Enable collision with world bounds
   bullet.setCollideWorldBounds(true, undefined, undefined, true)
@@ -181,7 +204,7 @@ export function shootShotgun(
     bullet.setRotation(angle)
 
     const speed = 1000
-    bullet.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed)
+    bullet?.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed)
 
     bullet.setCollideWorldBounds(true, undefined, undefined, true)
     bullet.body!.setCollisionCategory(2)
@@ -236,7 +259,7 @@ export function shootBullet(
 
   // Set bullet velocity
   const speed = 500
-  bullet.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed)
+  bullet?.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed)
 
   // Enable collision with world bounds
   bullet.setCollideWorldBounds(true, undefined, undefined, true)

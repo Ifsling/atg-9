@@ -19,6 +19,7 @@ import {
   showTopLeftOverlayText,
 } from "./HelperFunctions"
 import { createMap } from "./map/Map"
+import { ShowMissionDirection } from "./mission/MissionDirectionPointer"
 import { EnemyCar } from "./mission/MissionEnemyCar"
 import { MissionMarker } from "./mission/MissionMarker"
 import { manageNPCsCount } from "./npc/Npc"
@@ -30,6 +31,7 @@ import {
   setupPlayerParent,
 } from "./player/Player"
 import { preloadAssets } from "./PreloadAssets"
+import { StartCurrentMission } from "./mission/MissionHelperFunctions"
 
 export class MyGame extends Phaser.Scene {
   easystar!: EasyStar.js
@@ -68,6 +70,7 @@ export class MyGame extends Phaser.Scene {
   explosionParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
 
   // Missions Related
+  onceTimeUsuableFlag: boolean = false
   missionEnemies: EnemyNew[] = []
   storylineMission: {
     started: boolean
@@ -129,7 +132,7 @@ export class MyGame extends Phaser.Scene {
       volume: 0.2,
     })
 
-    music.play()
+    // music.play()
 
     const { map, houses, roads, backgroundLayer, water } = createMap(this)
     this.map = map
@@ -141,7 +144,7 @@ export class MyGame extends Phaser.Scene {
 
     addingGunstoMap(this)
 
-    this.PlayerParent = setupPlayerParent(this, 8500, 5500)
+    this.PlayerParent = setupPlayerParent(this, 1900, 3390)
 
     // Bullet pool
     createPlayerBullets(this)
@@ -152,24 +155,10 @@ export class MyGame extends Phaser.Scene {
     // UI
     handleUi(this)
 
-    const car = new Car(this, 8500, 5500, "topdown-car", this.cursors)
-
     // Particle Systems
     setupParticleSystem(this)
 
-    new MissionMarker(
-      this,
-      this.storylineMission.currentMission.missionMarkerPosition.x,
-      this.storylineMission.currentMission.missionMarkerPosition.y,
-      () => {
-        showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
-
-        this.missionEnemies = []
-        this.storylineMission.started = true
-
-        this.storylineMission.currentMission.missionFunction(this)
-      }
-    )
+    StartCurrentMission(this)
 
     // Colliders
     handleCollisions(this, houses, water)
@@ -202,5 +191,7 @@ export class MyGame extends Phaser.Scene {
     this.missionEnemyCars.forEach((car) => {
       car.update()
     })
+
+    ShowMissionDirection(this)
   }
 }

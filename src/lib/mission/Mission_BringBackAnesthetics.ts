@@ -2,6 +2,7 @@ import { STORYLINE_MISSIONS } from "../ConstantsAndTypes"
 import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 import { MissionEndMarker } from "./MissionEndMarker"
+import { StartCurrentMission } from "./MissionHelperFunctions"
 import { MissionMarker } from "./MissionMarker"
 
 export function Mission_BringBackAnesthetics(scene: MyGame) {
@@ -26,18 +27,7 @@ export function Mission_BringBackAnesthetics(scene: MyGame) {
     if (initialMissionEndMarker) initialMissionEndMarker.destroy()
     if (secondMissionEndMarker) secondMissionEndMarker.destroy()
 
-    new MissionMarker(
-      scene,
-      scene.storylineMission.currentMission.missionMarkerPosition.x,
-      scene.storylineMission.currentMission.missionMarkerPosition.y,
-      () => {
-        showTopLeftOverlayText(scene, "Mission Started", 20, 70, 3000)
-
-        scene.missionEnemies = []
-        scene.storylineMission.started = true
-        scene.storylineMission.currentMission.missionFunction(scene)
-      }
-    )
+    StartCurrentMission(scene)
   })
 
   initialMissionEndMarker = new MissionEndMarker(scene, 2250, 7950, () => {
@@ -50,6 +40,7 @@ export function Mission_BringBackAnesthetics(scene: MyGame) {
         failTimeout.remove(false)
 
         showTopLeftOverlayText(scene, "Mission Completed", 20, 70, 3000)
+        scene.storylineMission.started = false
 
         // Set the next mission
         scene.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_FIVE

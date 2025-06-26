@@ -1,6 +1,7 @@
 import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 import { EnemyCar } from "./MissionEnemyCar"
+import { StartCurrentMission } from "./MissionHelperFunctions"
 import { MissionMarker } from "./MissionMarker"
 
 export function Mission_BlastRobberCar(scene: MyGame) {
@@ -27,18 +28,7 @@ export function Mission_BlastRobberCar(scene: MyGame) {
       scene.missionEnemies = []
       enemyCar.destroy()
 
-      new MissionMarker(
-        scene,
-        scene.storylineMission.currentMission.missionMarkerPosition.x,
-        scene.storylineMission.currentMission.missionMarkerPosition.y,
-        () => {
-          showTopLeftOverlayText(scene, "Mission Started", 20, 70, 3000)
-
-          scene.missionEnemies = []
-          scene.storylineMission.started = true
-          scene.storylineMission.currentMission.missionFunction(scene)
-        }
-      )
+      StartCurrentMission(scene)
     }
   )
 }

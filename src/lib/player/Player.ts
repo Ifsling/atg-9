@@ -102,18 +102,18 @@ export function handlePlayerMovement(
   }
 
   const body = playerParent.body as Phaser.Physics.Arcade.Body
-  body.setVelocity(0)
+  body?.setVelocity(0)
 
   if (cursors.left.isDown || cursors.leftArrow.isDown) {
-    body.setVelocityX(-speed)
+    body?.setVelocityX(-speed)
   } else if (cursors.right.isDown || cursors.rightArrow.isDown) {
-    body.setVelocityX(speed)
+    body?.setVelocityX(speed)
   }
 
   if (cursors.up.isDown || cursors.upArrow.isDown) {
-    body.setVelocityY(-speed)
+    body?.setVelocityY(-speed)
   } else if (cursors.down.isDown || cursors.downArrow.isDown) {
-    body.setVelocityY(speed)
+    body?.setVelocityY(speed)
   }
 }
 

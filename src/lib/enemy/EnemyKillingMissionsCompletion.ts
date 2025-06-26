@@ -1,5 +1,6 @@
 import { STORYLINE_MISSIONS } from "../ConstantsAndTypes"
 import { showTopLeftOverlayText } from "../HelperFunctions"
+import { StartCurrentMission } from "../mission/MissionHelperFunctions"
 import { MissionMarker } from "../mission/MissionMarker"
 import { MyGame } from "../MyGame"
 
@@ -11,17 +12,7 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
     showTopLeftOverlayText(scene, "Mission Completed", 20, 70, 3000)
     scene.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_THREE
 
-    new MissionMarker(
-      scene,
-      scene.storylineMission.currentMission.missionMarkerPosition.x,
-      scene.storylineMission.currentMission.missionMarkerPosition.y,
-      () => {
-        showTopLeftOverlayText(scene, "Mission Started", 20, 70, 3000)
-        scene.missionEnemies = []
-        scene.storylineMission.started = true
-        scene.storylineMission.currentMission.missionFunction(scene)
-      }
-    )
+    StartCurrentMission(scene)
   } else if (
     scene.storylineMission.currentMission === STORYLINE_MISSIONS.MISSION_FIVE
   ) {
@@ -29,17 +20,7 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
       showTopLeftOverlayText(scene, "Mission Completed", 20, 70, 3000)
       scene.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_SIX
 
-      new MissionMarker(
-        scene,
-        scene.storylineMission.currentMission.missionMarkerPosition.x,
-        scene.storylineMission.currentMission.missionMarkerPosition.y,
-        () => {
-          showTopLeftOverlayText(scene, "Mission Started", 20, 70, 3000)
-          scene.missionEnemies = []
-          scene.storylineMission.started = true
-          scene.storylineMission.currentMission.missionFunction(scene)
-        }
-      )
+      StartCurrentMission
     } else {
       scene.storylineMission.started = false
 
@@ -58,17 +39,7 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
         enemy.destroy()
       })
 
-      new MissionMarker(
-        scene,
-        scene.storylineMission.currentMission.missionMarkerPosition.x,
-        scene.storylineMission.currentMission.missionMarkerPosition.y,
-        () => {
-          showTopLeftOverlayText(scene, "Mission Started", 20, 70, 3000)
-          scene.missionEnemies = []
-          scene.storylineMission.started = true
-          scene.storylineMission.currentMission.missionFunction(scene)
-        }
-      )
+      StartCurrentMission(scene)
     }
   } else if (
     scene.storylineMission.currentMission ===

@@ -1,7 +1,7 @@
 import { STORYLINE_MISSIONS } from "../ConstantsAndTypes"
 import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
-import { MissionMarker } from "./MissionMarker"
+import { StartCurrentMission } from "./MissionHelperFunctions"
 
 export class EnemyCar {
   scene: MyGame
@@ -171,19 +171,7 @@ export class EnemyCar {
         this.scene.storylineMission.currentMission =
           STORYLINE_MISSIONS.MISSION_SEVEN
 
-        new MissionMarker(
-          this.scene,
-          this.scene.storylineMission.currentMission.missionMarkerPosition.x,
-          this.scene.storylineMission.currentMission.missionMarkerPosition.y,
-          () => {
-            showTopLeftOverlayText(this.scene, "Mission Started", 20, 70, 3000)
-            this.scene.missionEnemyCars = []
-            this.scene.storylineMission.started = true
-            this.scene.storylineMission.currentMission.missionFunction(
-              this.scene
-            )
-          }
-        )
+        StartCurrentMission(this.scene)
       }
     }
   }

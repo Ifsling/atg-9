@@ -11,7 +11,8 @@ type GameStates = "menu" | "gameplay" | "gameOver"
 export default function PhaserGame() {
   const gameRef = useRef<Phaser.Game | null>(null)
 
-  const [currentGameState, setCurrentGameState] = useState<GameStates>("menu")
+  const [currentGameState, setCurrentGameState] =
+    useState<GameStates>("gameplay")
 
   useEffect(() => {
     const config = {
@@ -22,7 +23,7 @@ export default function PhaserGame() {
         default: "arcade",
         arcade: {
           gravity: { x: 0, y: 0 },
-          debug: false,
+          debug: true,
         },
       },
       dom: {
