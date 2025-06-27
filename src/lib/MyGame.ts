@@ -21,6 +21,7 @@ import { createMap } from "./map/Map"
 import { ShowMissionDirection } from "./mission/MissionDirectionPointer"
 import { EnemyCar } from "./mission/MissionEnemyCar"
 import {
+  LoadCurrentStorylineMission,
   MissionToMissionGuideText,
   StartCurrentMission,
 } from "./mission/MissionHelperFunctions"
@@ -81,11 +82,7 @@ export class MyGame extends Phaser.Scene {
       missionFunction: (scene: MyGame) => void
       missionMarkerPosition: { x: number; y: number }
     }
-  } = {
-    started: false,
-    currentMission: STORYLINE_MISSIONS.MISSION_THREE,
-  }
-  // LoadCurrentStorylineMission()
+  } = LoadCurrentStorylineMission()
 
   missionEnemyCars: EnemyCar[] = []
 
