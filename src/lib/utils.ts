@@ -31,7 +31,7 @@ export function getRandomSpawnLocationWithinRadius(
   )
 
   if (randomPointsWithinReach.length === 0) {
-    return { x: 0, y: 0 }
+    return { x: -1, y: -1 }
   }
 
   const randNum = Math.floor(Math.random() * randomPointsWithinReach.length)

@@ -13,16 +13,19 @@ export class EnemyNew {
   shootTimer!: Phaser.Time.TimerEvent
   shouldFollowPlayer: boolean = false
   isChoosenMissionEnemy: boolean = false
+  distToShootFrom: number = 3000
 
   constructor(
     scene: MyGame,
     x: number = 1100,
     y: number = 300,
     shouldFollowPlayer: boolean = false,
-    shootPlayer: boolean = true
+    shootPlayer: boolean = true,
+    distanceToShootFrom: number = 3000
   ) {
     this.scene = scene
     this.shouldFollowPlayer = shouldFollowPlayer
+    this.distToShootFrom = distanceToShootFrom
 
     // Create enemy sprite with physics
     this.enemySprite = scene.physics.add.sprite(x, y, "player").setScale(0.3)
@@ -87,7 +90,7 @@ export class EnemyNew {
     this.drawHealthBar()
 
     // Stop movement unless you add pathfinding
-    if (!this.shouldFollowPlayer) this.enemySprite.setVelocity(0)
+    if (!this.shouldFollowPlayer) this.enemySprite?.setVelocity(0)
   }
 
   // Draw or update the health bar above the enemy
@@ -122,7 +125,7 @@ export class EnemyNew {
       calculateDistance(
         { x: this.enemySprite.x, y: this.enemySprite.y },
         { x: player!.x, y: player!.y }
-      ) > 1500
+      ) > this.distToShootFrom
     )
       return
 
@@ -149,7 +152,7 @@ export class EnemyNew {
     bullet.body!.setOffset(bullet.width * 0.1, bullet.height * 0.1)
 
     bullet.setRotation(angle)
-    bullet.setVelocity(Math.cos(angle) * 400, Math.sin(angle) * 400)
+    bullet?.setVelocity(Math.cos(angle) * 400, Math.sin(angle) * 400)
     bullet.setCollideWorldBounds(true)
 
     if (!this.enemyBullets.contains(bullet)) {
@@ -233,7 +236,7 @@ export class EnemyNew {
 
     const moveToNextTile = () => {
       if (step >= path.length) {
-        this.enemySprite.setVelocity(0)
+        this.enemySprite?.setVelocity(0)
         return
       }
 
@@ -252,7 +255,7 @@ export class EnemyNew {
       const velocityX = Math.cos(angle) * speed
       const velocityY = Math.sin(angle) * speed
 
-      this.enemySprite.setVelocity(velocityX, velocityY)
+      this.enemySprite?.setVelocity(velocityX, velocityY)
 
       // Check if close to the target tile, then go to next step
       const checkArrival = scene.time.addEvent({
@@ -267,7 +270,7 @@ export class EnemyNew {
           )
 
           if (dist < 8) {
-            this.enemySprite.setVelocity(0)
+            this.enemySprite?.setVelocity(0)
             checkArrival.remove()
             step++
             moveToNextTile()

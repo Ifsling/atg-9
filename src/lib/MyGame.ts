@@ -16,11 +16,14 @@ import {
   handleUi,
   setupControls,
   setupParticleSystem,
-  showTopLeftOverlayText,
 } from "./HelperFunctions"
 import { createMap } from "./map/Map"
+import { ShowMissionDirection } from "./mission/MissionDirectionPointer"
 import { EnemyCar } from "./mission/MissionEnemyCar"
-import { MissionMarker } from "./mission/MissionMarker"
+import {
+  MissionToMissionGuideText,
+  StartCurrentMission,
+} from "./mission/MissionHelperFunctions"
 import { manageNPCsCount } from "./npc/Npc"
 import { cameraFollowPlayer } from "./player/Camera"
 import {
@@ -68,6 +71,9 @@ export class MyGame extends Phaser.Scene {
   explosionParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
 
   // Missions Related
+  missionMarkerArrow: Phaser.GameObjects.Image | null = null
+  missionMarkerDirectionText: Phaser.GameObjects.Text | null = null
+  onceTimeUsuableFlag: boolean = false
   missionEnemies: EnemyNew[] = []
   storylineMission: {
     started: boolean
@@ -77,8 +83,10 @@ export class MyGame extends Phaser.Scene {
     }
   } = {
     started: false,
-    currentMission: STORYLINE_MISSIONS.MISSION_ONE,
+    currentMission: STORYLINE_MISSIONS.MISSION_THREE,
   }
+  // LoadCurrentStorylineMission()
+
   missionEnemyCars: EnemyCar[] = []
 
   // Wanted Level Related
@@ -126,7 +134,7 @@ export class MyGame extends Phaser.Scene {
 
     const music = this.sound.add("bgMusic", {
       loop: true,
-      volume: 0.2,
+      volume: 0.15,
     })
 
     music.play()
@@ -141,7 +149,7 @@ export class MyGame extends Phaser.Scene {
 
     addingGunstoMap(this)
 
-    this.PlayerParent = setupPlayerParent(this, 8500, 5500)
+    this.PlayerParent = setupPlayerParent(this, 1900, 3390)
 
     // Bullet pool
     createPlayerBullets(this)
@@ -152,24 +160,23 @@ export class MyGame extends Phaser.Scene {
     // UI
     handleUi(this)
 
-    const car = new Car(this, 8500, 5500, "topdown-car", this.cursors)
-
     // Particle Systems
     setupParticleSystem(this)
 
-    new MissionMarker(
-      this,
-      this.storylineMission.currentMission.missionMarkerPosition.x,
-      this.storylineMission.currentMission.missionMarkerPosition.y,
-      () => {
-        showTopLeftOverlayText(this, "Mission Started", 20, 70, 3000)
+    const missionKey = Object.keys(STORYLINE_MISSIONS).find(
+      (key) =>
+        STORYLINE_MISSIONS[key as keyof typeof STORYLINE_MISSIONS] ===
+        this.storylineMission.currentMission
+    ) as keyof typeof STORYLINE_MISSIONS | undefined
 
-        this.missionEnemies = []
-        this.storylineMission.started = true
-
-        this.storylineMission.currentMission.missionFunction(this)
-      }
-    )
+    if (missionKey !== undefined) {
+      StartCurrentMission(this, MissionToMissionGuideText(missionKey), 6000)
+    } else {
+      console.error(
+        "Unknown mission value:",
+        this.storylineMission.currentMission
+      )
+    }
 
     // Colliders
     handleCollisions(this, houses, water)
@@ -202,5 +209,7 @@ export class MyGame extends Phaser.Scene {
     this.missionEnemyCars.forEach((car) => {
       car.update()
     })
+
+    ShowMissionDirection(this)
   }
 }

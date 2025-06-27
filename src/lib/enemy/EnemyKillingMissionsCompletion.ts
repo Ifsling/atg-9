@@ -1,6 +1,9 @@
 import { STORYLINE_MISSIONS } from "../ConstantsAndTypes"
 import { showTopLeftOverlayText } from "../HelperFunctions"
-import { MissionMarker } from "../mission/MissionMarker"
+import {
+  SaveCurrentMissionProgressInLocalStorage,
+  StartCurrentMission,
+} from "../mission/MissionHelperFunctions"
 import { MyGame } from "../MyGame"
 
 export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
@@ -11,16 +14,14 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
     showTopLeftOverlayText(scene, "Mission Completed", 20, 70, 3000)
     scene.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_THREE
 
-    new MissionMarker(
+    SaveCurrentMissionProgressInLocalStorage(scene)
+
+    StartCurrentMission(
       scene,
-      scene.storylineMission.currentMission.missionMarkerPosition.x,
-      scene.storylineMission.currentMission.missionMarkerPosition.y,
-      () => {
-        showTopLeftOverlayText(scene, "Mission Started", 20, 70, 3000)
-        scene.missionEnemies = []
-        scene.storylineMission.started = true
-        scene.storylineMission.currentMission.missionFunction(scene)
-      }
+      "Mission Started. Find and drop the father to his house.",
+      5000,
+      20,
+      100
     )
   } else if (
     scene.storylineMission.currentMission === STORYLINE_MISSIONS.MISSION_FIVE
@@ -29,16 +30,12 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
       showTopLeftOverlayText(scene, "Mission Completed", 20, 70, 3000)
       scene.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_SIX
 
-      new MissionMarker(
+      SaveCurrentMissionProgressInLocalStorage(scene)
+
+      StartCurrentMission(
         scene,
-        scene.storylineMission.currentMission.missionMarkerPosition.x,
-        scene.storylineMission.currentMission.missionMarkerPosition.y,
-        () => {
-          showTopLeftOverlayText(scene, "Mission Started", 20, 70, 3000)
-          scene.missionEnemies = []
-          scene.storylineMission.started = true
-          scene.storylineMission.currentMission.missionFunction(scene)
-        }
+        "Mission Started. Blast the robber car before it reaches its destination",
+        8000
       )
     } else {
       scene.storylineMission.started = false
@@ -58,16 +55,10 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
         enemy.destroy()
       })
 
-      new MissionMarker(
+      StartCurrentMission(
         scene,
-        scene.storylineMission.currentMission.missionMarkerPosition.x,
-        scene.storylineMission.currentMission.missionMarkerPosition.y,
-        () => {
-          showTopLeftOverlayText(scene, "Mission Started", 20, 70, 3000)
-          scene.missionEnemies = []
-          scene.storylineMission.started = true
-          scene.storylineMission.currentMission.missionFunction(scene)
-        }
+        "Mission Started. Find and kill the correct Medicine Hider among 3",
+        6000
       )
     }
   } else if (
@@ -78,6 +69,8 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
     showTopLeftOverlayText(scene, "Mission Completed", 20, 70, 3000)
     scene.storylineMission.currentMission =
       STORYLINE_MISSIONS.MISSIONS_COMPLETED
+
+    SaveCurrentMissionProgressInLocalStorage(scene)
 
     // Play final get together cutscene here
   }

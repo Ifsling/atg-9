@@ -52,7 +52,7 @@ export class MissionFather {
                 scene,
                 "You need a Car to pick up the Father!",
                 20,
-                70,
+                120,
                 7000
               )
             }
@@ -74,7 +74,7 @@ export class MissionFather {
             playerOrCar.y
           )
 
-          this.sprite.setVelocity(Math.cos(angle) * 100, Math.sin(angle) * 100)
+          this.sprite?.setVelocity(Math.cos(angle) * 100, Math.sin(angle) * 100)
 
           if (distance < 50) {
             if (onFatherPickedUp) {
@@ -84,7 +84,7 @@ export class MissionFather {
             this.sprite.destroy()
           }
         } else {
-          this.sprite.setVelocity(0, 0) // stop moving if player is out of range
+          this.sprite?.setVelocity(0, 0) // stop moving if player is out of range
         }
       },
     })

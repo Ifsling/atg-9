@@ -1,4 +1,5 @@
-import { CustomKeys } from "../ConstantsAndTypes"
+import { STORYLINE_MISSIONS } from "../ConstantsAndTypes"
+import { FailMission } from "../mission/Mission_PickUpFather"
 import { MyGame } from "../MyGame"
 
 export class Car extends Phaser.Physics.Arcade.Sprite {
@@ -23,7 +24,6 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
     x: number,
     y: number,
     texture: string,
-    cursors: CustomKeys,
     topSpeed: number = 400
   ) {
     super(scene, x, y, texture)
@@ -78,25 +78,29 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
     const now = this.scene.time.now
 
     // If player is inside car
-    if (this.isPlayerInside) {
-      this.handleDrivingControls()
+    if (this.scene.isPlayerIncar) {
+      // Only process controls if THIS is the car being driven
+      if (this.scene.carBeingDrivenByPlayer === this) {
+        this.handleDrivingControls()
 
-      if (
-        Phaser.Input.Keyboard.JustDown(this.scene.cursors.f) &&
-        now - this.lastToggleTime > this.toggleCooldown
-      ) {
-        this.exit()
-        this.lastToggleTime = now
+        if (
+          Phaser.Input.Keyboard.JustDown(this.scene.cursors.f) &&
+          now - this.lastToggleTime > this.toggleCooldown
+        ) {
+          this.exit()
+          this.lastToggleTime = now
+        }
       }
     } else {
-      // Check overlap and F key press
+      // Player is NOT in any car. Allow entering if overlapping.
       if (
-        Phaser.Input.Keyboard.JustDown(this.scene.cursors.f) &&
         now - this.lastToggleTime > this.toggleCooldown &&
         this.scene.physics.overlap(this, this.scene.PlayerParent)
       ) {
-        this.enter()
-        this.lastToggleTime = now
+        if (Phaser.Input.Keyboard.JustDown(this.scene.cursors.f)) {
+          this.enter()
+          this.lastToggleTime = now
+        }
       }
     }
 
@@ -119,10 +123,10 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
       this.scene.physics.velocityFromRotation(
         this.rotation,
         -this.maxSpeed / 2,
-        this!.body!.velocity
+        this?.body?.velocity
       )
     } else {
-      this.setVelocity(0)
+      this?.setVelocity(0)
     }
 
     // Turn left/right
@@ -156,11 +160,17 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
   }
 
   exit() {
+    this?.setVelocity(0)
     this.scene.isPlayerIncar = false
     this.scene.carBeingDrivenByPlayer = null
     this.isPlayerInside = false
 
     // Show player container and all its children
+    this.scene.PlayerParent.setPosition(
+      (this.body ? this.body.x : this.x) + 50,
+      (this.body ? this.body.y : this.y) + 50
+    )
+
     this.scene.PlayerParent.setVisible(true)
     this.scene.PlayerParent.iterate((child: any) => child.setVisible(true))
 
@@ -168,7 +178,6 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
     this.scene.physics.world.enable(this.scene.PlayerParent)
 
     // Place player next to car
-    this.scene.PlayerParent.setPosition(this.x + 50, this.y + 50)
 
     // Camera follows player again
     this.scene.cameras.main.startFollow(
@@ -191,20 +200,26 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
     }
 
     if (this.health <= 0) {
+      if (
+        this.scene.storylineMission.currentMission ===
+        STORYLINE_MISSIONS.MISSION_THREE
+      ) {
+        FailMission(this.scene)
+      }
+
       this.explode()
     }
   }
 
   explode() {
-    this.setVisible(false)
-    this.setActive(false)
-    this.setVelocity(0)
-
-    this.hideHealthBar()
-
     if (this.isPlayerInside) {
       this.exit()
     }
+    this.setVisible(false)
+    this.setActive(false)
+    this?.setVelocity(0)
+
+    this.hideHealthBar()
 
     // Optional: add explosion particle effects here
     this.scene.explosionParticleSystem.explode(

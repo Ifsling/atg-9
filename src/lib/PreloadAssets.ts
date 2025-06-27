@@ -27,4 +27,5 @@ export function preloadAssets(scene: MyGame) {
   scene.load.image("star", "/images/star.png")
   scene.load.image("father", "/images/father.png")
   scene.load.image("enemy-car", "/images/enemy-car.png")
+  scene.load.image("arrow-right", "/images/arrow-right.png")
 }

@@ -4,7 +4,10 @@ import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 import { damagePlayer } from "../player/Player"
 import { getRandomSpawnLocationWithinRadius } from "../utils"
-import { MissionMarker } from "./MissionMarker"
+import {
+  SaveCurrentMissionProgressInLocalStorage,
+  StartCurrentMission,
+} from "./MissionHelperFunctions"
 
 export function Mission_EnemyChasingYou(
   scene: MyGame,
@@ -30,17 +33,12 @@ export function Mission_EnemyChasingYou(
       if (scene.storylineMission.started) {
         scene.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_TWO
 
-        new MissionMarker(
-          scene,
-          scene.storylineMission.currentMission.missionMarkerPosition.x,
-          scene.storylineMission.currentMission.missionMarkerPosition.y,
-          () => {
-            showTopLeftOverlayText(scene, "Mission Started", 20, 70, 3000)
+        SaveCurrentMissionProgressInLocalStorage(scene)
 
-            scene.missionEnemies = []
-            scene.storylineMission.started = true
-            scene.storylineMission.currentMission.missionFunction(scene)
-          }
+        StartCurrentMission(
+          scene,
+          "Mission Started. Kill all the enemies",
+          4000
         )
       }
     },
@@ -77,7 +75,7 @@ export function Mission_EnemyChasingYou(
     }
 
     enemyPositions.push({ x: spawnX, y: spawnY })
-    const enemy = new EnemyNew(scene, spawnX, spawnY, true)
+    const enemy = new EnemyNew(scene, spawnX, spawnY, true, true, 5000)
     scene.enemies.push(enemy)
     scene.missionEnemies.push(enemy)
   }

@@ -138,7 +138,7 @@ export class NPC {
         this.followPath(path, tileSize)
       } else {
         // No valid path found
-        this.sprite.setVelocity(0)
+        this.sprite?.setVelocity(0)
         this.pickNewTarget()
       }
     })
@@ -152,7 +152,7 @@ export class NPC {
 
     const moveToNextTile = () => {
       if (this.pathStep >= this.path.length) {
-        this.sprite.setVelocity(0)
+        this.sprite?.setVelocity(0)
         this.path = []
         this.pickNewTarget()
         return
@@ -172,12 +172,17 @@ export class NPC {
       const velocityX = Math.cos(angle) * this.speed
       const velocityY = Math.sin(angle) * this.speed
 
-      this.sprite.setVelocity(velocityX, velocityY)
+      this.sprite?.setVelocity(velocityX, velocityY)
 
       const checkArrival = this.scene.time.addEvent({
         delay: 100,
         loop: true,
         callback: () => {
+          if (!this.sprite || !this.sprite.body || !this.sprite.active) {
+            checkArrival.remove()
+            return
+          }
+
           const dist = Phaser.Math.Distance.Between(
             this.sprite.x,
             this.sprite.y,

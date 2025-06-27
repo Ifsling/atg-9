@@ -7,6 +7,7 @@ import { Mission_PickUpFather } from "./mission/Mission_PickUpFather"
 import { Mission_SquadWipe } from "./mission/Mission_SquadWipe"
 
 export const TILE_SIZE = 300
+export const LOCALSTORAGE_MISSION_SAVE_KEY = "current_mission"
 
 export type GunTypes =
   | "pistol"

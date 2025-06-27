@@ -1,8 +1,8 @@
 import * as Phaser from "phaser"
 import { CustomKeys } from "../ConstantsAndTypes"
-import { showCenteredOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 import { isCheatConsoleOpen } from "../cheat-system/CheatSystem"
+import { GameoverOverlay } from "../gameover/Gameover"
 
 export class Player extends Phaser.GameObjects.Sprite {
   canShoot: boolean = false
@@ -27,15 +27,16 @@ export function damagePlayer(scene: MyGame, damageAmount: number) {
     }
   } else {
     scene.bloodParticleSystem.explode(
-      30,
       scene.playerParentBody.x,
-      scene.playerParentBody.y
+      scene.playerParentBody.y,
+      30
     )
 
     scene.isPlayerAlive = false
     scene.player.destroy()
     playerParent.destroy()
     scene.playerParentBody.destroy()
+
     if (scene.bullets) {
       scene.bullets.clear(true, true)
       scene.bullets.destroy()
@@ -45,12 +46,13 @@ export function damagePlayer(scene: MyGame, damageAmount: number) {
         runChildUpdate: true,
       })
     }
+
     drawPlayerHealthBar(scene, playerParent.health)
 
     const deathAudio = new Audio("/audio/death.wav")
     deathAudio.play()
 
-    showCenteredOverlayText(scene, "GAME OVER")
+    GameoverOverlay(scene)
   }
 }
 
@@ -70,8 +72,15 @@ export function setupPlayerParent(scene: MyGame, x: number, y: number) {
     -scene.player.displayHeight / 2
   )
 
-  // Player HEALTH
-  ;(scene.PlayerParent as any).health = 100
+  // Player state
+  const playerParent = scene.PlayerParent as any
+  playerParent.health = 100
+
+  // Sprint system initialization
+  playerParent.canSprint = true
+  playerParent.isSprinting = false
+  playerParent.sprintStartTime = 0
+  playerParent.sprintCooldownStart = 0
 
   return scene.PlayerParent
 }
@@ -82,28 +91,57 @@ export function createPlayer(
   yPos = 600
 ): Player {
   const player = new Player(scene, xPos, yPos, "player")
-
   return player
 }
 
 export function handlePlayerMovement(
   playerParent: Phaser.GameObjects.Container,
   cursors: CustomKeys,
-  speed = 200
+  baseSpeed = 200
 ) {
   if (!playerParent || !playerParent.body || !playerParent.active) return
-
-  if (isCheatConsoleOpen()) {
-    return
-  }
-
-  if (cursors.shift.isDown) {
-    speed = 1000
-  }
+  if (isCheatConsoleOpen()) return
 
   const body = playerParent.body as Phaser.Physics.Arcade.Body
   body.setVelocity(0)
 
+  const now = performance.now()
+  const p: any = playerParent
+  let speed = baseSpeed
+
+  // Sprint logic
+  const maxSprintDuration = 3000 // 3 seconds
+  const cooldownDuration = 4000 // 4 seconds
+
+  if (cursors.shift.isDown && p.canSprint) {
+    if (!p.isSprinting) {
+      p.isSprinting = true
+      p.sprintStartTime = now
+    }
+
+    const sprintElapsed = now - p.sprintStartTime
+    if (sprintElapsed < maxSprintDuration) {
+      speed = 400
+    } else {
+      // Sprint expired
+      p.isSprinting = false
+      p.canSprint = false
+      p.sprintCooldownStart = now
+    }
+  } else {
+    p.isSprinting = false
+  }
+
+  // Cooldown handling
+  if (!p.canSprint) {
+    const cooldownElapsed = now - (p.sprintCooldownStart || 0)
+    if (cooldownElapsed >= cooldownDuration) {
+      p.canSprint = true
+      p.sprintStartTime = 0
+    }
+  }
+
+  // Movement
   if (cursors.left.isDown || cursors.leftArrow.isDown) {
     body.setVelocityX(-speed)
   } else if (cursors.right.isDown || cursors.rightArrow.isDown) {

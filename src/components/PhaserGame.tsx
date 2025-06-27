@@ -6,14 +6,16 @@ import { useEffect, useRef, useState } from "react"
 import { MyGame } from "../lib/MyGame"
 import MenuScreen from "./MenuScreen"
 
-type GameStates = "menu" | "gameplay" | "gameOver"
+type GameStates = "menu" | "gameplay"
 
 export default function PhaserGame() {
   const gameRef = useRef<Phaser.Game | null>(null)
-
   const [currentGameState, setCurrentGameState] = useState<GameStates>("menu")
 
+  // Create the Phaser game only when the state is 'gameplay'
   useEffect(() => {
+    if (currentGameState !== "gameplay" || gameRef.current) return
+
     const config = {
       type: Phaser.AUTO,
       width: window.innerWidth,
@@ -22,7 +24,7 @@ export default function PhaserGame() {
         default: "arcade",
         arcade: {
           gravity: { x: 0, y: 0 },
-          debug: false,
+          debug: true,
         },
       },
       dom: {
@@ -42,7 +44,7 @@ export default function PhaserGame() {
         gameRef.current.scale.resize(width, height)
 
         const scene = gameRef.current.scene.getAt(0)
-        if (scene && scene.cameras && scene.cameras.main) {
+        if (scene?.cameras?.main) {
           scene.cameras.main.setSize(width, height)
         }
       }
@@ -54,9 +56,10 @@ export default function PhaserGame() {
       window.removeEventListener("resize", handleResize)
       if (gameRef.current) {
         gameRef.current.destroy(true)
+        gameRef.current = null
       }
     }
-  }, [])
+  }, [currentGameState])
 
   if (currentGameState === "menu") {
     return (
@@ -66,7 +69,7 @@ export default function PhaserGame() {
         }}
       />
     )
-  } else if (currentGameState === "gameplay") {
-    return <div id="phaser-container" />
   }
+
+  return <div id="phaser-container" className="w-full h-screen" />
 }
