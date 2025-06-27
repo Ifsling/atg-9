@@ -110,7 +110,7 @@ export function handlePlayerMovement(
   let speed = baseSpeed
 
   // Sprint logic
-  const maxSprintDuration = 30000 // 3 seconds
+  const maxSprintDuration = 3000 // 3 seconds
   const cooldownDuration = 4000 // 4 seconds
 
   if (cursors.shift.isDown && p.canSprint) {
@@ -121,7 +121,7 @@ export function handlePlayerMovement(
 
     const sprintElapsed = now - p.sprintStartTime
     if (sprintElapsed < maxSprintDuration) {
-      speed = 1000
+      speed = 400
     } else {
       // Sprint expired
       p.isSprinting = false
