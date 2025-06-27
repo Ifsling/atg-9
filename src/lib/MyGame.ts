@@ -16,12 +16,14 @@ import {
   handleUi,
   setupControls,
   setupParticleSystem,
-  showTopLeftOverlayText,
 } from "./HelperFunctions"
 import { createMap } from "./map/Map"
 import { ShowMissionDirection } from "./mission/MissionDirectionPointer"
 import { EnemyCar } from "./mission/MissionEnemyCar"
-import { MissionMarker } from "./mission/MissionMarker"
+import {
+  MissionToMissionGuideText,
+  StartCurrentMission,
+} from "./mission/MissionHelperFunctions"
 import { manageNPCsCount } from "./npc/Npc"
 import { cameraFollowPlayer } from "./player/Camera"
 import {
@@ -31,7 +33,6 @@ import {
   setupPlayerParent,
 } from "./player/Player"
 import { preloadAssets } from "./PreloadAssets"
-import { StartCurrentMission } from "./mission/MissionHelperFunctions"
 
 export class MyGame extends Phaser.Scene {
   easystar!: EasyStar.js
@@ -70,6 +71,8 @@ export class MyGame extends Phaser.Scene {
   explosionParticleSystem!: Phaser.GameObjects.Particles.ParticleEmitter
 
   // Missions Related
+  missionMarkerArrow: Phaser.GameObjects.Image | null = null
+  missionMarkerDirectionText: Phaser.GameObjects.Text | null = null
   onceTimeUsuableFlag: boolean = false
   missionEnemies: EnemyNew[] = []
   storylineMission: {
@@ -80,8 +83,10 @@ export class MyGame extends Phaser.Scene {
     }
   } = {
     started: false,
-    currentMission: STORYLINE_MISSIONS.MISSION_ONE,
+    currentMission: STORYLINE_MISSIONS.MISSION_THREE,
   }
+  // LoadCurrentStorylineMission()
+
   missionEnemyCars: EnemyCar[] = []
 
   // Wanted Level Related
@@ -158,7 +163,20 @@ export class MyGame extends Phaser.Scene {
     // Particle Systems
     setupParticleSystem(this)
 
-    StartCurrentMission(this)
+    const missionKey = Object.keys(STORYLINE_MISSIONS).find(
+      (key) =>
+        STORYLINE_MISSIONS[key as keyof typeof STORYLINE_MISSIONS] ===
+        this.storylineMission.currentMission
+    ) as keyof typeof STORYLINE_MISSIONS | undefined
+
+    if (missionKey !== undefined) {
+      StartCurrentMission(this, MissionToMissionGuideText(missionKey), 6000)
+    } else {
+      console.error(
+        "Unknown mission value:",
+        this.storylineMission.currentMission
+      )
+    }
 
     // Colliders
     handleCollisions(this, houses, water)

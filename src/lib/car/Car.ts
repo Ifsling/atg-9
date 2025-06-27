@@ -1,3 +1,5 @@
+import { STORYLINE_MISSIONS } from "../ConstantsAndTypes"
+import { FailMission } from "../mission/Mission_PickUpFather"
 import { MyGame } from "../MyGame"
 
 export class Car extends Phaser.Physics.Arcade.Sprite {
@@ -121,7 +123,7 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
       this.scene.physics.velocityFromRotation(
         this.rotation,
         -this.maxSpeed / 2,
-        this!.body!.velocity
+        this?.body?.velocity
       )
     } else {
       this?.setVelocity(0)
@@ -198,20 +200,26 @@ export class Car extends Phaser.Physics.Arcade.Sprite {
     }
 
     if (this.health <= 0) {
+      if (
+        this.scene.storylineMission.currentMission ===
+        STORYLINE_MISSIONS.MISSION_THREE
+      ) {
+        FailMission(this.scene)
+      }
+
       this.explode()
     }
   }
 
   explode() {
+    if (this.isPlayerInside) {
+      this.exit()
+    }
     this.setVisible(false)
     this.setActive(false)
     this?.setVelocity(0)
 
     this.hideHealthBar()
-
-    if (this.isPlayerInside) {
-      this.exit()
-    }
 
     // Optional: add explosion particle effects here
     this.scene.explosionParticleSystem.explode(

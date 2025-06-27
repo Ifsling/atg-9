@@ -1,7 +1,10 @@
 import { STORYLINE_MISSIONS } from "../ConstantsAndTypes"
 import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
-import { StartCurrentMission } from "./MissionHelperFunctions"
+import {
+  SaveCurrentMissionProgressInLocalStorage,
+  StartCurrentMission,
+} from "./MissionHelperFunctions"
 
 export class EnemyCar {
   scene: MyGame
@@ -171,7 +174,13 @@ export class EnemyCar {
         this.scene.storylineMission.currentMission =
           STORYLINE_MISSIONS.MISSION_SEVEN
 
-        StartCurrentMission(this.scene)
+        SaveCurrentMissionProgressInLocalStorage(this.scene)
+
+        StartCurrentMission(
+          this.scene,
+          "Mission Started. Kill all the remaining enemies",
+          5000
+        )
       }
     }
   }

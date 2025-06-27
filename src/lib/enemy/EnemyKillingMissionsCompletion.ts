@@ -1,7 +1,9 @@
 import { STORYLINE_MISSIONS } from "../ConstantsAndTypes"
 import { showTopLeftOverlayText } from "../HelperFunctions"
-import { StartCurrentMission } from "../mission/MissionHelperFunctions"
-import { MissionMarker } from "../mission/MissionMarker"
+import {
+  SaveCurrentMissionProgressInLocalStorage,
+  StartCurrentMission,
+} from "../mission/MissionHelperFunctions"
 import { MyGame } from "../MyGame"
 
 export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
@@ -12,7 +14,15 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
     showTopLeftOverlayText(scene, "Mission Completed", 20, 70, 3000)
     scene.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_THREE
 
-    StartCurrentMission(scene)
+    SaveCurrentMissionProgressInLocalStorage(scene)
+
+    StartCurrentMission(
+      scene,
+      "Mission Started. Find and drop the father to his house.",
+      5000,
+      20,
+      100
+    )
   } else if (
     scene.storylineMission.currentMission === STORYLINE_MISSIONS.MISSION_FIVE
   ) {
@@ -20,7 +30,13 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
       showTopLeftOverlayText(scene, "Mission Completed", 20, 70, 3000)
       scene.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_SIX
 
-      StartCurrentMission
+      SaveCurrentMissionProgressInLocalStorage(scene)
+
+      StartCurrentMission(
+        scene,
+        "Mission Started. Blast the robber car before it reaches its destination",
+        8000
+      )
     } else {
       scene.storylineMission.started = false
 
@@ -39,7 +55,11 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
         enemy.destroy()
       })
 
-      StartCurrentMission(scene)
+      StartCurrentMission(
+        scene,
+        "Mission Started. Find and kill the correct Medicine Hider among 3",
+        6000
+      )
     }
   } else if (
     scene.storylineMission.currentMission ===
@@ -49,6 +69,8 @@ export function completeMission(scene: MyGame, isChoosenMissionEnemy: boolean) {
     showTopLeftOverlayText(scene, "Mission Completed", 20, 70, 3000)
     scene.storylineMission.currentMission =
       STORYLINE_MISSIONS.MISSIONS_COMPLETED
+
+    SaveCurrentMissionProgressInLocalStorage(scene)
 
     // Play final get together cutscene here
   }

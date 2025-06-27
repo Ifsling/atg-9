@@ -178,6 +178,11 @@ export class NPC {
         delay: 100,
         loop: true,
         callback: () => {
+          if (!this.sprite || !this.sprite.body || !this.sprite.active) {
+            checkArrival.remove()
+            return
+          }
+
           const dist = Phaser.Math.Distance.Between(
             this.sprite.x,
             this.sprite.y,
@@ -186,9 +191,7 @@ export class NPC {
           )
 
           if (dist < 8) {
-            if (this.sprite?.active) {
-              this.sprite?.setVelocity(0)
-            }
+            this.sprite.setVelocity(0)
             checkArrival.remove()
             this.pathStep++
             moveToNextTile()

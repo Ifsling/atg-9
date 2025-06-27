@@ -13,16 +13,19 @@ export class EnemyNew {
   shootTimer!: Phaser.Time.TimerEvent
   shouldFollowPlayer: boolean = false
   isChoosenMissionEnemy: boolean = false
+  distToShootFrom: number = 3000
 
   constructor(
     scene: MyGame,
     x: number = 1100,
     y: number = 300,
     shouldFollowPlayer: boolean = false,
-    shootPlayer: boolean = true
+    shootPlayer: boolean = true,
+    distanceToShootFrom: number = 3000
   ) {
     this.scene = scene
     this.shouldFollowPlayer = shouldFollowPlayer
+    this.distToShootFrom = distanceToShootFrom
 
     // Create enemy sprite with physics
     this.enemySprite = scene.physics.add.sprite(x, y, "player").setScale(0.3)
@@ -122,7 +125,7 @@ export class EnemyNew {
       calculateDistance(
         { x: this.enemySprite.x, y: this.enemySprite.y },
         { x: player!.x, y: player!.y }
-      ) > 1500
+      ) > this.distToShootFrom
     )
       return
 

@@ -377,6 +377,7 @@ export function addEnemyToTheScene(scene: MyGame, x: number, y: number) {
 export function showCenteredOverlayText(
   scene: Phaser.Scene,
   message: string,
+  onRespawn: () => void = () => {},
   textColor: number = 0xffffff,
   tintColor: number = 0x000000,
   tintAlpha: number = 0.6
@@ -397,7 +398,7 @@ export function showCenteredOverlayText(
 
   // Create text in the center
   const overlayText = scene.add
-    .text(scene.scale.width / 2, scene.scale.height / 2, message, {
+    .text(scene.scale.width / 2, scene.scale.height / 2 - 40, message, {
       fontSize: "64px",
       color: `#${textColor.toString(16).padStart(6, "0")}`,
       fontFamily: "Arial",
@@ -410,15 +411,39 @@ export function showCenteredOverlayText(
     .setScrollFactor(0)
     .setDepth(10001)
 
-  // Add both to a container
-  const overlayContainer = scene.add.container(0, 0, [tintBg, overlayText])
+  // Create a button below the text
+  const button = scene.add
+    .text(scene.scale.width / 2, scene.scale.height / 2 + 60, "Respawn", {
+      fontSize: "36px",
+      color: "#ffffff",
+      backgroundColor: "#007bff",
+      padding: { x: 20, y: 10 },
+      fontFamily: "Arial",
+      align: "center",
+    })
+    .setOrigin(0.5)
+    .setScrollFactor(0)
+    .setDepth(10001)
+    .setInteractive({ useHandCursor: true })
+    .on("pointerup", () => {
+      overlayContainer.destroy() // Remove overlay
+      onRespawn() // Call the respawn callback
+    })
+
+  // Add all to a container
+  const overlayContainer = scene.add.container(0, 0, [
+    tintBg,
+    overlayText,
+    button,
+  ])
   overlayContainer.setDepth(10000)
 
   // Keep it responsive to resizes
   scene.scale.on("resize", (gameSize: Phaser.Structs.Size) => {
     const { width, height } = gameSize
     tintBg.setSize(width, height)
-    overlayText.setPosition(width / 2, height / 2)
+    overlayText.setPosition(width / 2, height / 2 - 40)
+    button.setPosition(width / 2, height / 2 + 60)
   })
 
   return overlayContainer

@@ -7,9 +7,16 @@ let label: Phaser.GameObjects.Text
 export function ShowMissionDirection(scene: MyGame) {
   if (
     scene.storylineMission.currentMission ===
-    STORYLINE_MISSIONS.MISSIONS_COMPLETED
-  )
+      STORYLINE_MISSIONS.MISSIONS_COMPLETED ||
+    scene.storylineMission.started
+  ) {
+    scene.missionMarkerArrow?.setAlpha(0)
+    scene.missionMarkerDirectionText?.setAlpha(0)
     return
+  }
+
+  scene.missionMarkerArrow?.setAlpha(1)
+  scene.missionMarkerDirectionText?.setAlpha(1)
 
   const missionMarkerPosition =
     scene.storylineMission.currentMission.missionMarkerPosition
@@ -33,10 +40,26 @@ export function ShowMissionDirection(scene: MyGame) {
   }
 
   if (!label) {
-    label = scene.add.text(arrowX, arrowY - 20, "mission marker direction", {
-      fontSize: "10px",
-      color: "#ffffff",
-    })
+    if (
+      scene.storylineMission.currentMission ===
+        STORYLINE_MISSIONS.MISSION_THREE &&
+      scene.storylineMission.started
+    ) {
+      label = scene.add.text(
+        arrowX,
+        arrowY - 20,
+        "Drop Father in this direction",
+        {
+          fontSize: "10px",
+          color: "#ffffff",
+        }
+      )
+    } else {
+      label = scene.add.text(arrowX, arrowY - 20, "mission marker direction", {
+        fontSize: "10px",
+        color: "#ffffff",
+      })
+    }
     label.setOrigin(0.5)
     label.setScrollFactor(0)
     label.setDepth(2000)
@@ -46,4 +69,7 @@ export function ShowMissionDirection(scene: MyGame) {
   arrow.setRotation(angle)
 
   label.setPosition(arrowX, arrowY - 20)
+
+  scene.missionMarkerArrow = arrow
+  scene.missionMarkerDirectionText = label
 }

@@ -2,8 +2,7 @@ import { STORYLINE_MISSIONS } from "../ConstantsAndTypes"
 import { showTopLeftOverlayText } from "../HelperFunctions"
 import { MyGame } from "../MyGame"
 import { MissionEndMarker } from "./MissionEndMarker"
-import { StartCurrentMission } from "./MissionHelperFunctions"
-import { MissionMarker } from "./MissionMarker"
+import { SaveCurrentMissionProgressInLocalStorage, StartCurrentMission } from "./MissionHelperFunctions"
 
 export function Mission_BringBackAnesthetics(scene: MyGame) {
   let missionCompleted = false
@@ -27,7 +26,11 @@ export function Mission_BringBackAnesthetics(scene: MyGame) {
     if (initialMissionEndMarker) initialMissionEndMarker.destroy()
     if (secondMissionEndMarker) secondMissionEndMarker.destroy()
 
-    StartCurrentMission(scene)
+    StartCurrentMission(
+      scene,
+      "Mission Started. Find and bring back the anesthetics within 2 minutes",
+      7000
+    )
   })
 
   initialMissionEndMarker = new MissionEndMarker(scene, 2250, 7950, () => {
@@ -44,6 +47,14 @@ export function Mission_BringBackAnesthetics(scene: MyGame) {
 
         // Set the next mission
         scene.storylineMission.currentMission = STORYLINE_MISSIONS.MISSION_FIVE
+
+        SaveCurrentMissionProgressInLocalStorage(scene)
+
+        StartCurrentMission(
+          scene,
+          "Mission Started. Find and kill the correct Medicine Hider among 3",
+          6000
+        )
       },
       "only_player"
     )

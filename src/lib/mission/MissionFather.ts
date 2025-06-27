@@ -52,7 +52,7 @@ export class MissionFather {
                 scene,
                 "You need a Car to pick up the Father!",
                 20,
-                70,
+                120,
                 7000
               )
             }
