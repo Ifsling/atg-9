@@ -57,7 +57,10 @@ export function LoadCurrentStorylineMission() {
       STORYLINE_MISSIONS[parsed?.currentMissionKey ?? "MISSION_ONE"],
   }
 
-  return storylineMission
+  return {
+    started: false,
+    currentMission: STORYLINE_MISSIONS.MISSION_TWO,
+  }
 }
 
 export function MissionToMissionGuideText(

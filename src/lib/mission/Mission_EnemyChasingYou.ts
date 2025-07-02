@@ -12,7 +12,7 @@ import {
 export function Mission_EnemyChasingYou(
   scene: MyGame,
   noOfEnemies: number = 5,
-  noOfMinuesOfMission: number = 0.1
+  noOfMinuesOfMission: number = 2
 ) {
   const missionStartTime = scene.time.now
   localStorage.setItem("missionStartTime", missionStartTime.toString())

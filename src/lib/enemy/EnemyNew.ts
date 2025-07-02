@@ -13,7 +13,7 @@ export class EnemyNew {
   shootTimer!: Phaser.Time.TimerEvent
   shouldFollowPlayer: boolean = false
   isChoosenMissionEnemy: boolean = false
-  distToShootFrom: number = 3000
+  distToShootFrom: number = 2500
 
   constructor(
     scene: MyGame,
