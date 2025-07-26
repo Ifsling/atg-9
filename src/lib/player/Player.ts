@@ -97,7 +97,8 @@ export function createPlayer(
 export function handlePlayerMovement(
   playerParent: Phaser.GameObjects.Container,
   cursors: CustomKeys,
-  baseSpeed = 200
+  baseSpeed = 200,
+  sprintSpeed = 400
 ) {
   if (!playerParent || !playerParent.body || !playerParent.active) return
   if (isCheatConsoleOpen()) return
@@ -110,7 +111,7 @@ export function handlePlayerMovement(
   let speed = baseSpeed
 
   // Sprint logic
-  const maxSprintDuration = 3000 // 3 seconds
+  const maxSprintDuration = 4000 // 3 seconds
   const cooldownDuration = 4000 // 4 seconds
 
   if (cursors.shift.isDown && p.canSprint) {
@@ -121,7 +122,7 @@ export function handlePlayerMovement(
 
     const sprintElapsed = now - p.sprintStartTime
     if (sprintElapsed < maxSprintDuration) {
-      speed = 400
+      speed = sprintSpeed
     } else {
       // Sprint expired
       p.isSprinting = false

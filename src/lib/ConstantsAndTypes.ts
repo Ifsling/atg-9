@@ -445,7 +445,7 @@ export const STORYLINE_MISSIONS = {
   },
   MISSION_FIVE: {
     missionFunction: Mission_KillTheMedHider,
-    missionMarkerPosition: { x: 9150, y: 5250 },
+    missionMarkerPosition: { x: 8250, y: 5250 },
   },
   MISSION_SIX: {
     missionFunction: Mission_BlastRobberCar,

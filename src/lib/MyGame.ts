@@ -28,6 +28,7 @@ import {
 import { manageNPCsCount } from "./npc/Npc"
 import { cameraFollowPlayer } from "./player/Camera"
 import {
+  damagePlayer,
   drawPlayerHealthBar,
   handlePlayerMovement,
   PlayerCharacter,
@@ -146,7 +147,7 @@ export class MyGame extends Phaser.Scene {
 
     addingGunstoMap(this)
 
-    this.PlayerParent = setupPlayerParent(this, 450, 450)
+    this.PlayerParent = setupPlayerParent(this, 1700, 3390)
 
     // Bullet pool
     createPlayerBullets(this)
@@ -179,6 +180,12 @@ export class MyGame extends Phaser.Scene {
     handleCollisions(this, houses, water)
 
     drawPlayerHealthBar(this, (this.PlayerParent as any).health)
+
+    this!.input!.keyboard!.on("keydown-K", () => {
+      if (this.isPlayerAlive) {
+        damagePlayer(this, 10) // Reduce health by 10
+      }
+    })
   }
 
   // Modified MyGame update function with debug visualization

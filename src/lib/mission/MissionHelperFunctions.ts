@@ -59,7 +59,7 @@ export function LoadCurrentStorylineMission() {
 
   return {
     started: false,
-    currentMission: STORYLINE_MISSIONS.MISSION_TWO,
+    currentMission: STORYLINE_MISSIONS.MISSION_ONE,
   }
 }
 

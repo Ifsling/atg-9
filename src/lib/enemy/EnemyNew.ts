@@ -14,6 +14,7 @@ export class EnemyNew {
   shouldFollowPlayer: boolean = false
   isChoosenMissionEnemy: boolean = false
   distToShootFrom: number = 2500
+  movementSpeed: number = 215
 
   constructor(
     scene: MyGame,
@@ -21,7 +22,7 @@ export class EnemyNew {
     y: number = 300,
     shouldFollowPlayer: boolean = false,
     shootPlayer: boolean = true,
-    distanceToShootFrom: number = 3000
+    distanceToShootFrom: number = 2500
   ) {
     this.scene = scene
     this.shouldFollowPlayer = shouldFollowPlayer
@@ -115,7 +116,9 @@ export class EnemyNew {
   }
 
   shootAtPlayer = () => {
+    console.log("HERE BUT ---")
     if (this.scene.isPlayerAlive === false) return
+    console.log(".,..")
 
     const player = this.scene.isPlayerIncar
       ? this.scene.carBeingDrivenByPlayer
@@ -251,9 +254,8 @@ export class EnemyNew {
         targetY
       )
 
-      const speed = 100
-      const velocityX = Math.cos(angle) * speed
-      const velocityY = Math.sin(angle) * speed
+      const velocityX = Math.cos(angle) * this.movementSpeed
+      const velocityY = Math.sin(angle) * this.movementSpeed
 
       this.enemySprite?.setVelocity(velocityX, velocityY)
 
