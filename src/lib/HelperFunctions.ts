@@ -83,6 +83,8 @@ export function handleCollisions(
 
   // Add physical collision between player and Cops
   scene.cops.forEach((cop) => {
+    if (!cop.enemyBullets) return // safety check
+
     scene.physics.add.overlap(
       cop.enemyBullets,
       scene.PlayerParent,

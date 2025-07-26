@@ -15,6 +15,7 @@ export class NPC {
   maxHealth: number = 100
   targetLocation: { x: number; y: number } | null = null
   speed: number = 100
+  damaged: boolean = false
 
   path: { x: number; y: number }[] = []
   pathStep: number = 0
@@ -67,6 +68,14 @@ export class NPC {
       callback: () => {
         if (!this.sprite?.active) return
         this.startPathfinding()
+      },
+    })
+
+    scene.time.addEvent({
+      delay: 500,
+      loop: true,
+      callback: () => {
+        if (this.damaged) this.drawHealthBar()
       },
     })
   }
@@ -204,6 +213,7 @@ export class NPC {
   }
 
   takeDamage(amount: number) {
+    if (!this.damaged) this.damaged = true
     this.health -= amount
 
     if (this.health <= 0) {
