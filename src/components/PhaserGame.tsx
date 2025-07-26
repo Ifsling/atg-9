@@ -10,8 +10,7 @@ type GameStates = "menu" | "gameplay"
 
 export default function PhaserGame() {
   const gameRef = useRef<Phaser.Game | null>(null)
-  const [currentGameState, setCurrentGameState] =
-    useState<GameStates>("gameplay")
+  const [currentGameState, setCurrentGameState] = useState<GameStates>("menu")
 
   // Create the Phaser game only when the state is 'gameplay'
   useEffect(() => {

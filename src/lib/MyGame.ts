@@ -147,7 +147,7 @@ export class MyGame extends Phaser.Scene {
 
     addingGunstoMap(this)
 
-    this.PlayerParent = setupPlayerParent(this, 1700, 3390)
+    this.PlayerParent = setupPlayerParent(this, 450, 450)
 
     // Bullet pool
     createPlayerBullets(this)
